@@ -1,0 +1,22 @@
+{
+  "name": "cool-compiler",
+  "version": "1.0.0",
+  "description": "Compiler for COOL language. Project carried out to evaluate compilers discipline at the college.",
+  "main": "index.js",
+  "scripts": {
+    "open": "./node_modules/.bin/cypress open",
+    "run": "./node_modules/.bin/cypress run"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TR-Rafael/cool-compiler.git"
+  },
+  "author": "TR-Rafael",
+  "bugs": {
+    "url": "https://github.com/TR-Rafael/cool-compiler/issues"
+  },
+  "homepage": "https://github.com/TR-Rafael/cool-compiler#readme",
+  "devDependencies": {
+    "cypress": "^9.3.1"
+  }
+}

@@ -1,0 +1,9 @@
+# Folders
+node_modules
+cypress/screenshots/*
+cypress/videos/*
+cypress/downloads/*
+package-lock.json
+
+# Editor directories and files
+.idea
