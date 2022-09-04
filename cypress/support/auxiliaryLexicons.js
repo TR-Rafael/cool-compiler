@@ -54,9 +54,8 @@ function lexiconAnalyzer({ codeRaw }) {
   let cacheOfAnalyser = EMPTY_STRING
   let indexOfEndOfBlockComment = -1
   let isInlineComment = false
-  let code = codeRaw
   const tokens = []
-  cy.wrap(code.split(EMPTY_STRING))
+  cy.wrap(codeRaw.split(EMPTY_STRING))
     .each((char, index, code) => {
       const cacheOfAnalyserWithNewChar = cacheOfAnalyser + char
       if (dittoMarkCounter === 0
@@ -203,8 +202,9 @@ function lexiconAnalyzer({ codeRaw }) {
                   type: RESERVED_WORD
                 })
                 cacheOfAnalyser = EMPTY_STRING
-              } else if (arrayOfSpecialCharacter.includes(char)
-                                && dittoMarkCounter === 0
+              } else if (
+                arrayOfSpecialCharacter.includes(char)
+                  && dittoMarkCounter === 0
               ){
                 if (cacheOfAnalyserWithNewChar.length > 1 && !isInlineComment){
                   tokens.push({
@@ -236,7 +236,6 @@ function lexiconAnalyzer({ codeRaw }) {
             line++
           }
         }
-
       }
     })
   return tokens

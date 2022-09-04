@@ -1,8 +1,6 @@
 # cool-compiler
 Compiler for COOL language. Project carried out to evaluate compilers discipline  at the college.
 
-## Project setup (development)
-
 ## Requirements
 
 * Node = v16.15.1 <- Version used in creation.
