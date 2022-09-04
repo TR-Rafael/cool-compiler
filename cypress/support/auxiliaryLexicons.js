@@ -30,7 +30,6 @@ function tokenFilter({codeRaw}) {
     let indexOfEndOfBlockComment = -1
     let isInlineComment = false
     let code = codeRaw
-    console.log(code)
     const tokens = []
     cy.wrap(code.split(''))
         .each((char, index, code) => {
@@ -194,12 +193,14 @@ function tokenFilter({codeRaw}) {
                                         line
                                     })
                                 }
-                                tokens.push({
-                                    case: '4',
-                                    token: char,
-                                    type: SPECIAL_CHARACTER,
-                                    line
-                                })
+                                if(!isInlineComment){
+                                    tokens.push({
+                                        case: '40',
+                                        token: char,
+                                        type: SPECIAL_CHARACTER,
+                                        line
+                                    })
+                                }
                                 cacheOfAnalyser = ''
                             } else if(!isInlineComment){
                                 cacheOfAnalyser = cacheOfAnalyserWithNewChar
@@ -219,7 +220,6 @@ function tokenFilter({codeRaw}) {
 
             }
         })
-    console.log(code)
     return tokens
 }
 

@@ -1,5 +1,5 @@
 class Main inherits IO {
--- algo
+-- algo.
     (* aaa
     aaaa
     *)
