@@ -26,7 +26,8 @@ const {
  * @param { string } param.codeRaw - Full analysis code.
  * @returns {[tokens]} - Token array.
  */
-function tokenFilter({codeRaw}) {
+function lexiconAnalyzer({ codeRaw }) {
+  
   let dittoMarkCounter = 0
   let line = 1
   let cacheOfAnalyser = ''
@@ -37,14 +38,14 @@ function tokenFilter({codeRaw}) {
   cy.wrap(code.split(''))
     .each((char, index, code) => {
       const cacheOfAnalyserWithNewChar = cacheOfAnalyser + char
-      if(dittoMarkCounter === 0 && char === '(' && !isInlineComment
+      if (dittoMarkCounter === 0 && char === '(' && !isInlineComment
             && ['*'].includes(code[index + 1]) && indexOfEndOfBlockComment === -1){
         indexOfEndOfBlockComment = code.join('').slice(index).indexOf('*)') + 2 + index
-      }else {
-        if(indexOfEndOfBlockComment === -1){
+      } else {
+        if (indexOfEndOfBlockComment === -1){
           switch (char) {
             case '\n':
-              if(isInlineComment){
+              if (isInlineComment){
                 isInlineComment = false
               }
               cacheOfAnalyser = ''
@@ -52,14 +53,14 @@ function tokenFilter({codeRaw}) {
               break
 
             case '-':
-              if(dittoMarkCounter === 0
-                                && arrayOfOperators.includes(cacheOfAnalyserWithNewChar)
-                                && !isInlineComment
+              if (dittoMarkCounter === 0
+                  && arrayOfOperators.includes(cacheOfAnalyserWithNewChar)
+                  && !isInlineComment
               ){
-                if(['-'].includes(code[index + 1])){
+                if (['-'].includes(code[index + 1])){
                   cacheOfAnalyser = ''
                   isInlineComment = true
-                }else{
+                } else {
                   tokens.push({
                     case: '1',
                     token: cacheOfAnalyserWithNewChar,
@@ -68,21 +69,21 @@ function tokenFilter({codeRaw}) {
                   })
                   cacheOfAnalyser = ''
                 }
-              }else if (dittoMarkCounter !== 0 && !isInlineComment){
+              } else if (dittoMarkCounter !== 0 && !isInlineComment){
                 cacheOfAnalyser = cacheOfAnalyserWithNewChar
-              } else if(!isInlineComment){
+              } else if (!isInlineComment){
                 cacheOfAnalyser = ''
               }
               break
 
             case '=':
-              if(dittoMarkCounter === 0
+              if (dittoMarkCounter === 0
                                 && arrayOfOperators.includes(cacheOfAnalyserWithNewChar)
                                 && !isInlineComment
               ){
-                if(['>'].includes(code[index + 1])){
+                if (['>'].includes(code[index + 1])){
                   cacheOfAnalyser = cacheOfAnalyserWithNewChar
-                }else{
+                } else {
                   tokens.push({
                     case: '1',
                     token: cacheOfAnalyserWithNewChar,
@@ -91,21 +92,21 @@ function tokenFilter({codeRaw}) {
                   })
                   cacheOfAnalyser = ''
                 }
-              }else if (dittoMarkCounter !== 0 && !isInlineComment){
+              } else if (dittoMarkCounter !== 0 && !isInlineComment){
                 cacheOfAnalyser = cacheOfAnalyserWithNewChar
-              } else if(!isInlineComment) {
+              } else if (!isInlineComment) {
                 cacheOfAnalyser = ''
               }
               break
 
             case '<':
-              if(dittoMarkCounter === 0
+              if (dittoMarkCounter === 0
                                 && arrayOfOperators.includes(cacheOfAnalyserWithNewChar)
                                 && !isInlineComment
               ){
-                if(['-', '='].includes(code[index + 1])){
+                if (['-', '='].includes(code[index + 1])){
                   cacheOfAnalyser = cacheOfAnalyserWithNewChar
-                } else{
+                } else {
                   tokens.push({
                     case: '1',
                     token: cacheOfAnalyserWithNewChar,
@@ -115,9 +116,9 @@ function tokenFilter({codeRaw}) {
                   cacheOfAnalyser = ''
                 }
 
-              }else if (dittoMarkCounter !== 0 && !isInlineComment){
+              } else if (dittoMarkCounter !== 0 && !isInlineComment){
                 cacheOfAnalyser = cacheOfAnalyserWithNewChar
-              } else if(!isInlineComment){
+              } else if (!isInlineComment){
                 cacheOfAnalyser = ''
               }
               break
@@ -137,7 +138,7 @@ function tokenFilter({codeRaw}) {
                 cacheOfAnalyser = ''
               } else if (dittoMarkCounter !== 0 && !isInlineComment){
                 cacheOfAnalyser = cacheOfAnalyserWithNewChar
-              } else if(!isInlineComment){
+              } else if (!isInlineComment){
                 cacheOfAnalyser = ''
               }
               break
@@ -152,14 +153,14 @@ function tokenFilter({codeRaw}) {
                 })
                 dittoMarkCounter = 0
                 cacheOfAnalyser = ''
-              } else if(!isInlineComment){
+              } else if (!isInlineComment){
                 cacheOfAnalyser = cacheOfAnalyserWithNewChar
                 dittoMarkCounter++
               }
               break
 
             default:
-              if(dittoMarkCounter === 0
+              if (dittoMarkCounter === 0
                                 && arrayOfOperators.includes(cacheOfAnalyserWithNewChar)
                                 && !isInlineComment
               ){
@@ -195,7 +196,7 @@ function tokenFilter({codeRaw}) {
                     line
                   })
                 }
-                if(!isInlineComment){
+                if (!isInlineComment){
                   tokens.push({
                     case: '40',
                     token: char,
@@ -204,17 +205,17 @@ function tokenFilter({codeRaw}) {
                   })
                 }
                 cacheOfAnalyser = ''
-              } else if(!isInlineComment){
+              } else if (!isInlineComment){
                 cacheOfAnalyser = cacheOfAnalyserWithNewChar
               }
           }
-        }else if (index === indexOfEndOfBlockComment){
+        } else if (index === indexOfEndOfBlockComment){
           if (char === '\n') {
             line++
           }
           indexOfEndOfBlockComment = -1
           cacheOfAnalyser = ''
-        }else{
+        } else {
           if (char === '\n') {
             line++
           }
@@ -225,4 +226,4 @@ function tokenFilter({codeRaw}) {
   return tokens
 }
 
-export { tokenFilter }
+export { lexiconAnalyzer }

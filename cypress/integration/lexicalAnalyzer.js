@@ -1,4 +1,4 @@
-import {tokenFilter} from '../support/auxiliaryLexicons'
+import { lexiconAnalyzer } from '../support/auxiliaryLexicons'
 
 const title = 'Lexical analyzer'
 // change the value of the `pathForFileInCOOL ` variable to the path of the file you want to compile.
@@ -9,7 +9,7 @@ const pathForFileInCOOL = 'cypress/fixtures/examples/problematicCases.cl'
 describe(title, () => {
   it(title, () => {
     cy.readFile(pathForFileInCOOL).then(codeRaw => {
-      const tokens = tokenFilter({codeRaw})
+      const tokens = lexiconAnalyzer({ codeRaw })
       console.log(tokens)
     })
   })

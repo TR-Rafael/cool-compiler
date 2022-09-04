@@ -55,6 +55,8 @@ module.exports = {
     'import/no-named-as-default': ['error'],
     'import/no-named-as-default-member': ['error'],
     indent: ['warn', 2, { SwitchCase: 1 }],
+    'key-spacing': ['error', { afterColon: true }],
+    'keyword-spacing': ['error', { after: true, before: true }],
     'no-multi-spaces': 'error',
     'no-restricted-imports': [
       'error',
@@ -67,11 +69,12 @@ module.exports = {
         ]
       }
     ],
-    'no-unreachable':  'warn',
+    'no-unreachable': 'warn',
     'no-unused-vars': [
       'warn',
       { args: 'all', argsIgnorePattern: '^_', varsIgnorePattern: '^_' }
     ],
+    'object-curly-spacing': ['error', 'always'],
     'prefer-destructuring': [
       'error',
       {
