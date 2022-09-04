@@ -7,11 +7,10 @@ const title = 'Lexical analyzer'
 const pathForFileInCOOL = 'cypress/fixtures/examples/problematicCases.cl'
 // TODO improve logic of logical comparisons
 describe(title, () => {
-    it(title, () => {
-      cy.readFile(pathForFileInCOOL).then(codeRaw => {
-
-          const tokens = tokenFilter({codeRaw})
-          console.log(tokens)
-      })
+  it(title, () => {
+    cy.readFile(pathForFileInCOOL).then(codeRaw => {
+      const tokens = tokenFilter({codeRaw})
+      console.log(tokens)
     })
+  })
 })
