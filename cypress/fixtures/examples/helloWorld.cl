@@ -1,22 +1,5 @@
 class Main inherits IO {
--- algo.
-    (* aaa
-    aaaa
-    *)
-    (* aaa
-    {********}
-        aaaa
-        *)
-        (**)
-        (**)
-        (**)
-        (**)
-        (**)
-
-    main() : Object { -- bagulho
+    main() : Object {
         out_string("Hello, world.\n")
     };
-
-
-
-};--styfguyteawfguyew
+};
