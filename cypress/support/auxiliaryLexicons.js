@@ -3,7 +3,13 @@ import {
   SPECIAL_CHARACTERS,
   DITTO_MARK,
   OPERATORS,
-  SPECIAL_NAMES
+  SPECIAL_NAMES,
+  BLOCK_COMMENT,
+  JUMP_LINE,
+  TAB,
+  EMPTY_STRING,
+  SPACE,
+  GREATER_THAN_SIGN
 } from './constantObjects'
 
 const arrayOfReservedWords = Object.values(RESERVED_WORDS)
@@ -18,6 +24,21 @@ const {
   STRING
 } = SPECIAL_NAMES
 
+const {
+  CLOSE_BLOCK_OF_COMMENT
+} = BLOCK_COMMENT
+
+const {
+  OPEN_PARENTHESES
+} = SPECIAL_CHARACTERS
+
+const {
+  EQUAL_SIGN,
+  LESS_THAN_SIGN,
+  MINUS_SIGN,
+  MULTIPLICATION_SIGN
+} = OPERATORS
+
 
 /**
  * Function responsible for analyzing COOL code and returning array of tokens, in other words performing lexical analysis of the code.
@@ -30,129 +51,128 @@ function lexiconAnalyzer({ codeRaw }) {
   
   let dittoMarkCounter = 0
   let line = 1
-  let cacheOfAnalyser = ''
+  let cacheOfAnalyser = EMPTY_STRING
   let indexOfEndOfBlockComment = -1
   let isInlineComment = false
   let code = codeRaw
   const tokens = []
-  cy.wrap(code.split(''))
+  cy.wrap(code.split(EMPTY_STRING))
     .each((char, index, code) => {
       const cacheOfAnalyserWithNewChar = cacheOfAnalyser + char
-      if (dittoMarkCounter === 0 && char === '(' && !isInlineComment
-            && ['*'].includes(code[index + 1]) && indexOfEndOfBlockComment === -1){
-        indexOfEndOfBlockComment = code.join('').slice(index).indexOf('*)') + 2 + index
+      if (dittoMarkCounter === 0
+          && char === OPEN_PARENTHESES
+          && !isInlineComment
+          && [MULTIPLICATION_SIGN].includes(code[index + 1])
+          && indexOfEndOfBlockComment === -1
+      ){
+        indexOfEndOfBlockComment = code.join(EMPTY_STRING).slice(index).indexOf(CLOSE_BLOCK_OF_COMMENT) + 2 + index
       } else {
         if (indexOfEndOfBlockComment === -1){
           switch (char) {
-            case '\n':
+            case JUMP_LINE:
               if (isInlineComment){
                 isInlineComment = false
               }
-              cacheOfAnalyser = ''
+              cacheOfAnalyser = EMPTY_STRING
               line++
               break
 
-            case '-':
+            case MINUS_SIGN:
               if (dittoMarkCounter === 0
                   && arrayOfOperators.includes(cacheOfAnalyserWithNewChar)
                   && !isInlineComment
               ){
-                if (['-'].includes(code[index + 1])){
-                  cacheOfAnalyser = ''
+                if ([MINUS_SIGN].includes(code[index + 1])){
+                  cacheOfAnalyser = EMPTY_STRING
                   isInlineComment = true
                 } else {
                   tokens.push({
-                    case: '1',
+                    line,
                     token: cacheOfAnalyserWithNewChar,
-                    type: OPERATOR,
-                    line
+                    type: OPERATOR
                   })
-                  cacheOfAnalyser = ''
+                  cacheOfAnalyser = EMPTY_STRING
                 }
               } else if (dittoMarkCounter !== 0 && !isInlineComment){
                 cacheOfAnalyser = cacheOfAnalyserWithNewChar
               } else if (!isInlineComment){
-                cacheOfAnalyser = ''
+                cacheOfAnalyser = EMPTY_STRING
               }
               break
 
-            case '=':
+            case EQUAL_SIGN:
               if (dittoMarkCounter === 0
-                                && arrayOfOperators.includes(cacheOfAnalyserWithNewChar)
-                                && !isInlineComment
+                  && arrayOfOperators.includes(cacheOfAnalyserWithNewChar)
+                  && !isInlineComment
               ){
-                if (['>'].includes(code[index + 1])){
+                if ([GREATER_THAN_SIGN].includes(code[index + 1])){
                   cacheOfAnalyser = cacheOfAnalyserWithNewChar
                 } else {
                   tokens.push({
-                    case: '1',
+                    line,
                     token: cacheOfAnalyserWithNewChar,
-                    type: OPERATOR,
-                    line
+                    type: OPERATOR
                   })
-                  cacheOfAnalyser = ''
+                  cacheOfAnalyser = EMPTY_STRING
                 }
               } else if (dittoMarkCounter !== 0 && !isInlineComment){
                 cacheOfAnalyser = cacheOfAnalyserWithNewChar
               } else if (!isInlineComment) {
-                cacheOfAnalyser = ''
+                cacheOfAnalyser = EMPTY_STRING
               }
               break
 
-            case '<':
+            case LESS_THAN_SIGN:
               if (dittoMarkCounter === 0
-                                && arrayOfOperators.includes(cacheOfAnalyserWithNewChar)
-                                && !isInlineComment
+                  && arrayOfOperators.includes(cacheOfAnalyserWithNewChar)
+                  && !isInlineComment
               ){
-                if (['-', '='].includes(code[index + 1])){
+                if ([MINUS_SIGN, EQUAL_SIGN].includes(code[index + 1])){
                   cacheOfAnalyser = cacheOfAnalyserWithNewChar
                 } else {
                   tokens.push({
-                    case: '1',
+                    line,
                     token: cacheOfAnalyserWithNewChar,
-                    type: OPERATOR,
-                    line
+                    type: OPERATOR
                   })
-                  cacheOfAnalyser = ''
+                  cacheOfAnalyser = EMPTY_STRING
                 }
 
               } else if (dittoMarkCounter !== 0 && !isInlineComment){
                 cacheOfAnalyser = cacheOfAnalyserWithNewChar
               } else if (!isInlineComment){
-                cacheOfAnalyser = ''
+                cacheOfAnalyser = EMPTY_STRING
               }
               break
 
-            case ' ' :
-            case '\t':
+            case SPACE :
+            case TAB:
               if (dittoMarkCounter === 0
-                                && ![' ', '\t'].includes(cacheOfAnalyserWithNewChar)
-                                && !isInlineComment
+                  && ![SPACE, TAB].includes(cacheOfAnalyserWithNewChar)
+                  && !isInlineComment
               ){
                 tokens.push({
-                  case: '1',
+                  line,
                   token: cacheOfAnalyser,
-                  type: IDENTIFIER,
-                  line
+                  type: IDENTIFIER
                 })
-                cacheOfAnalyser = ''
+                cacheOfAnalyser = EMPTY_STRING
               } else if (dittoMarkCounter !== 0 && !isInlineComment){
                 cacheOfAnalyser = cacheOfAnalyserWithNewChar
               } else if (!isInlineComment){
-                cacheOfAnalyser = ''
+                cacheOfAnalyser = EMPTY_STRING
               }
               break
 
             case DITTO_MARK:
               if (dittoMarkCounter > 0 && !isInlineComment){
                 tokens.push({
-                  case: '5',
+                  line,
                   token: cacheOfAnalyserWithNewChar,
-                  type: STRING,
-                  line
+                  type: STRING
                 })
                 dittoMarkCounter = 0
-                cacheOfAnalyser = ''
+                cacheOfAnalyser = EMPTY_STRING
               } else if (!isInlineComment){
                 cacheOfAnalyser = cacheOfAnalyserWithNewChar
                 dittoMarkCounter++
@@ -161,62 +181,58 @@ function lexiconAnalyzer({ codeRaw }) {
 
             default:
               if (dittoMarkCounter === 0
-                                && arrayOfOperators.includes(cacheOfAnalyserWithNewChar)
-                                && !isInlineComment
+                  && arrayOfOperators.includes(cacheOfAnalyserWithNewChar)
+                  && !isInlineComment
               ){
                 tokens.push({
-                  case: '1',
+                  line,
                   token: cacheOfAnalyserWithNewChar,
-                  type: OPERATOR,
-                  line
+                  type: OPERATOR
                 })
-                cacheOfAnalyser = ''
+                cacheOfAnalyser = EMPTY_STRING
               } else if (
                 arrayOfReservedWords.includes(cacheOfAnalyserWithNewChar)
-                                && index + 1 !== code.length
-                                && [' ', '\n'].includes(code[index + 1])
-                                && dittoMarkCounter === 0
-                                && !isInlineComment
+                && index + 1 !== code.length
+                && [SPACE, JUMP_LINE].includes(code[index + 1])
+                && dittoMarkCounter === 0
+                && !isInlineComment
               ){
                 tokens.push({
-                  case: '2',
+                  line,
                   token: cacheOfAnalyserWithNewChar,
-                  type: RESERVED_WORD,
-                  line
+                  type: RESERVED_WORD
                 })
-                cacheOfAnalyser = ''
+                cacheOfAnalyser = EMPTY_STRING
               } else if (arrayOfSpecialCharacter.includes(char)
                                 && dittoMarkCounter === 0
               ){
                 if (cacheOfAnalyserWithNewChar.length > 1 && !isInlineComment){
                   tokens.push({
-                    case: '3',
+                    line,
                     token: cacheOfAnalyser,
-                    type: IDENTIFIER,
-                    line
+                    type: IDENTIFIER
                   })
                 }
                 if (!isInlineComment){
                   tokens.push({
-                    case: '40',
+                    line,
                     token: char,
-                    type: SPECIAL_CHARACTER,
-                    line
+                    type: SPECIAL_CHARACTER
                   })
                 }
-                cacheOfAnalyser = ''
+                cacheOfAnalyser = EMPTY_STRING
               } else if (!isInlineComment){
                 cacheOfAnalyser = cacheOfAnalyserWithNewChar
               }
           }
         } else if (index === indexOfEndOfBlockComment){
-          if (char === '\n') {
+          if (char === JUMP_LINE) {
             line++
           }
           indexOfEndOfBlockComment = -1
-          cacheOfAnalyser = ''
+          cacheOfAnalyser = EMPTY_STRING
         } else {
-          if (char === '\n') {
+          if (char === JUMP_LINE) {
             line++
           }
         }

@@ -55,10 +55,15 @@ const SPECIAL_NAMES = {
 
 const DITTO_MARK = '"'
 const COMMENT_INLINE = '--'
+const JUMP_LINE = '\n'
+const TAB = '\t'
+const EMPTY_STRING = ''
+const SPACE = ' '
+const GREATER_THAN_SIGN = '>'
 
 const BLOCK_COMMENT = {
   OPEN_BLOCK_OF_COMMENT: '(*',
-  CLOSE_BLOCK_OF_COMMENT: '(*'
+  CLOSE_BLOCK_OF_COMMENT: '*)'
 }
 export {
   COMMENT_INLINE,
@@ -67,5 +72,10 @@ export {
   SPECIAL_CHARACTERS,
   SPECIAL_NAMES,
   DITTO_MARK,
-  OPERATORS
+  OPERATORS,
+  JUMP_LINE,
+  TAB,
+  EMPTY_STRING,
+  GREATER_THAN_SIGN,
+  SPACE
 }
