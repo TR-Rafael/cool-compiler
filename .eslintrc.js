@@ -57,6 +57,7 @@ module.exports = {
     indent: ['warn', 2, { SwitchCase: 1 }],
     'key-spacing': ['error', { afterColon: true }],
     'keyword-spacing': ['error', { after: true, before: true }],
+    'no-case-declarations': 'off',
     'no-multi-spaces': 'error',
     'no-restricted-imports': [
       'error',
