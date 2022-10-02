@@ -45,6 +45,7 @@ const {
   ASSIGNMENT,
   DIVISION_SIGN,
   EQUAL_SIGN,
+  IMPLICATION,
   LESS_THAN_OR_EQUAL_SIGN,
   LESS_THAN_SIGN,
   MINUS_SIGN,
@@ -295,7 +296,6 @@ function handleFeatureColonCase({ Tokens, index }){
 
 function handleExpressionGroup1({ Tokens, index }){
   let endIndexOfFeature
-  let endIndexOfCaseNew
   const { token } = Tokens[index]
   switch (token){
     case FALSE:
@@ -354,20 +354,16 @@ function handleExpressionGroup1({ Tokens, index }){
       }
       break
     case CASE:
-      // TODO implementar lógica
-      endIndexOfFeature = handleExpressionGroup1({ Tokens, index: index + 1 })
+      endIndexOfFeature = handleExpressionCase({ Tokens, index: index + 1 })
       break
     case LET:
-      // TODO implementar lógica
-      endIndexOfFeature = handleExpressionGroup1({ Tokens, index: index + 1 })
+      endIndexOfFeature = handleExpressionLet({ Tokens, index: index + 1 })
       break
     case WHILE:
-      // TODO implementar lógica
-      endIndexOfFeature = handleExpressionGroup1({ Tokens, index: index + 1 })
+      endIndexOfFeature = handleExpressionWhile({ Tokens, index: index + 1 })
       break
     case IF:
-      // TODO implementar lógica
-      endIndexOfFeature = handleExpressionGroup1({ Tokens, index: index + 1 })
+      endIndexOfFeature = handleExpressionIF({ Tokens, index: index + 1 })
       break
     default:
       const { type: actualTokenType } = Tokens[index]
@@ -384,6 +380,232 @@ function handleExpressionGroup1({ Tokens, index }){
       }
   }
   return endIndexOfFeature
+}
+
+function handleExpressionCase({ Tokens, index }){
+  let endIndexOfCASE
+  let endIndexOfOF
+  let indexAux
+  let endIndexOfExpressionCASECase
+
+  endIndexOfCASE = handleExpressionGroup1({ Tokens, index: index })
+  const { token } = Tokens[endIndexOfCASE]
+  if (token === OF){
+    let conditional = true
+    indexAux = endIndexOfCASE + 1
+    while (conditional){
+      const { type: typeInsideTheOF } = Tokens[indexAux]
+      if (typeInsideTheOF === IDENTIFIER){
+        const { token: tokenInsideTheIdentifier } = Tokens[indexAux + 1]
+        if (tokenInsideTheIdentifier === COLON){
+          const { type: typeInsideTheColon } = Tokens[indexAux + 2]
+          if (typeInsideTheColon === IDENTIFIER){
+            const { type: typeInsideTheSecondIdentifier } = Tokens[indexAux + 3]
+            if (typeInsideTheSecondIdentifier === IMPLICATION){
+              endIndexOfOF = handleExpressionGroup1({ Tokens, index: indexAux + 4 })
+              const { type: typeInsideTheFinishedOF } = Tokens[endIndexOfOF]
+              if (typeInsideTheFinishedOF === SEMICOLON){
+                const { token: tokenAfterSemicolon, type: typeAfterSemicolon } = Tokens[endIndexOfOF + 1]
+                if (tokenAfterSemicolon === ESAC){
+                  conditional = false
+                  endIndexOfExpressionCASECase = endIndexOfOF + 2
+                } else if (typeAfterSemicolon === IDENTIFIER){
+                  indexAux = endIndexOfOF + 1
+                } else {
+                  conditional = false
+                  console.log('Erro')
+                  endIndexOfExpressionCASECase = -1
+                }
+              } else {
+                conditional = false
+                console.log('Erro')
+                endIndexOfExpressionCASECase = -1
+              }
+            } else {
+              conditional = false
+              console.log('Erro')
+              endIndexOfExpressionCASECase = -1
+            }
+
+          } else {
+            conditional = false
+            console.log('Erro')
+            endIndexOfExpressionCASECase = -1
+          }
+        } else {
+          conditional = false
+          console.log('Erro')
+          endIndexOfExpressionCASECase = -1
+        }
+      } else {
+        conditional = false
+        console.log('Erro')
+        endIndexOfExpressionCASECase = -1
+      }
+    }
+  } else {
+    console.log('Erro')
+    endIndexOfExpressionCASECase = -1
+  }
+
+  return endIndexOfExpressionCASECase
+}
+
+function handleExpressionLet({ Tokens, index }){
+  let endIndexOfInsideTheLet
+  let endIndexOfExpressionLETCase
+  const { type } = Tokens[index]
+  if (type === IDENTIFIER){
+    const { token } = Tokens[index + 1]
+    if (token === COLON){
+      const { type } = Tokens[index + 2]
+      if (type === IDENTIFIER){
+        endIndexOfInsideTheLet = handleInsideTheLet({ Tokens, index: index + 3 })
+        const { token } = Tokens[endIndexOfInsideTheLet]
+        if (token === IN){
+          endIndexOfExpressionLETCase = handleExpressionGroup1({ Tokens, index: endIndexOfInsideTheLet + 1 })
+        } else {
+          console.log('Erro')
+          endIndexOfExpressionLETCase = -1
+        }
+      } else {
+        console.log('Erro')
+        endIndexOfExpressionLETCase = -1
+      }
+    } else {
+      console.log('Erro')
+      endIndexOfExpressionLETCase = -1
+    }
+
+  } else {
+    console.log('Erro')
+    endIndexOfExpressionLETCase = -1
+  }
+
+  return endIndexOfExpressionLETCase
+}
+
+function handleInsideTheLet({ Tokens, index }){
+  let endIndexOfInsideTheLet = index
+  const { token } = Tokens[index]
+  switch (token) {
+    case IN:
+      endIndexOfInsideTheLet = index
+      break
+    case ASSIGNMENT:
+      endIndexOfInsideTheLet = handleExpressionGroup1({ Tokens, index: index + 1 })
+      // TODO verificar se não da problema aqui
+      // eslint-disable-next-line no-fallthrough
+    case COMMA:
+      let conditional = true
+      let auxIndex = endIndexOfInsideTheLet
+      while (conditional){
+        const { token } = Tokens[auxIndex]
+        if (token === COMMA){
+          const { type } = Tokens[auxIndex + 1]
+          if (type === IDENTIFIER){
+            const { token } = Tokens[auxIndex + 2]
+            if (token === COLON){
+              const { type } = Tokens[auxIndex + 3]
+              if (type === IDENTIFIER){
+                const { token } = Tokens[auxIndex + 4]
+                switch (token) {
+                  case ASSIGNMENT:
+                    auxIndex = handleExpressionGroup1({ Tokens, index: index + 5 })
+                    break
+                  case IN:
+                    endIndexOfInsideTheLet = index + 4
+                    conditional = false
+                    break
+                  default:
+                    console.log('Erro')
+                    conditional = false
+                    endIndexOfInsideTheLet = -1
+                }
+
+              } else {
+                console.log('Erro')
+                conditional = false
+                endIndexOfInsideTheLet = -1
+              }
+            } else {
+              console.log('Erro')
+              conditional = false
+              endIndexOfInsideTheLet = -1
+            }
+          } else {
+            console.log('Erro')
+            conditional = false
+            endIndexOfInsideTheLet = -1
+          }
+        } else {
+          conditional = false
+          endIndexOfInsideTheLet = auxIndex
+        }
+      }
+      break
+    default:
+      console.log('Erro')
+      endIndexOfInsideTheLet = -1
+  }
+
+  return endIndexOfInsideTheLet
+}
+
+function handleExpressionWhile({ Tokens, index }){
+  let endIndexOfWHILE
+  let endIndexOfLOOP
+  let endIndexOfExpressionWHILECase
+
+  endIndexOfWHILE = handleExpressionGroup1({ Tokens, index: index })
+  const { token } = Tokens[endIndexOfWHILE]
+  if (token === LOOP){
+    endIndexOfLOOP = handleExpressionGroup1({ Tokens, index: endIndexOfWHILE + 1 })
+    const { token } = Tokens[endIndexOfLOOP]
+    if (token === POOL){
+      endIndexOfExpressionWHILECase = endIndexOfLOOP + 1
+    } else {
+      console.log('Erro')
+      endIndexOfExpressionWHILECase = -1
+    }
+  } else {
+    console.log('Erro')
+    endIndexOfExpressionWHILECase = -1
+  }
+
+  return endIndexOfExpressionWHILECase
+}
+
+function handleExpressionIF({ Tokens, index }){
+  let endIndexOfIF
+  let endIndexOfTHEN
+  let endIndexOfELSE
+  let endIndexOfExpressionIFCase
+
+  endIndexOfIF = handleExpressionGroup1({ Tokens, index: index })
+  const { token } = Tokens[endIndexOfIF]
+  if (token === THEN){
+    endIndexOfTHEN = handleExpressionGroup1({ Tokens, index: endIndexOfIF + 1 })
+    const { token } = Tokens[endIndexOfTHEN]
+    if (token === ELSE){
+      endIndexOfELSE = handleExpressionGroup1({ Tokens, index: endIndexOfTHEN + 1 })
+      const { token } = Tokens[endIndexOfELSE]
+      if (token === FI){
+        endIndexOfExpressionIFCase = endIndexOfELSE + 1
+      } else {
+        console.log('Erro')
+        endIndexOfExpressionIFCase = -1
+      }
+    } else {
+      console.log('Erro')
+      endIndexOfExpressionIFCase = -1
+    }
+  } else {
+    console.log('Erro')
+    endIndexOfExpressionIFCase = -1
+  }
+
+  return endIndexOfExpressionIFCase
 }
 
 function handleExpressionOfIdentifier({ Tokens, index }){
