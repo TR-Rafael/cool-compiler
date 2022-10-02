@@ -30,12 +30,16 @@ const {
 
 const {
   CLOSE_BRACES,
+  CLOSE_PARENTHESES,
+  COLON,
+  COMMA,
   OPEN_BRACES,
   OPEN_PARENTHESES,
   SEMICOLON
 } = SPECIAL_CHARACTERS
 
 const {
+  ASSIGNMENT,
   EQUAL_SIGN,
   LESS_THAN_SIGN,
   MINUS_SIGN,
@@ -137,26 +141,141 @@ function handleInherits({ Tokens, index }){
 
 async function handleFeature({ Tokens, index }){
   let endIndexOfFeature
+  let idxAfterColonCase
+  let idxAfterOpenParenthesesCase
+  let idxAfterCloseParenthesesCase
   const { token, type } = Tokens[index]
 
   if (token === CLOSE_BRACES){
     endIndexOfFeature = index + 1
   } else if (type === IDENTIFIER) {
-    // TODO AQUI vai ser as variações de Features
     const { token } = Tokens[index + 1]
     switch (token){
-      case INHERITS:
-        // TODO temporario
-        endIndexOfFeature = -1
+      case COLON:
+        idxAfterColonCase = handleFeatureColonCase({ Tokens,index: index + 2 })
+        endIndexOfFeature = idxAfterColonCase
         break
-      case OPEN_BRACES:
-        // TODO temporario
-        endIndexOfFeature = -1
+      case OPEN_PARENTHESES:
+        idxAfterOpenParenthesesCase = handleFeatureOpenParenthesesCase({ Tokens,index: index + 2 })
+        idxAfterCloseParenthesesCase = handleFeatureAfterCloseParenthesesCase({ Tokens,index: idxAfterOpenParenthesesCase })
+        const { token } = Tokens[idxAfterCloseParenthesesCase]
+        if (token === CLOSE_BRACES){
+          endIndexOfFeature = index + 1
+        } else {
+          console.log('Error')
+          endIndexOfFeature = -1
+        }
         break
       default:
         console.log('Error')
         endIndexOfFeature = -1
     }
+  } else {
+    console.log('Erro')
+    endIndexOfFeature = -1
+  }
+  return endIndexOfFeature
+}
+
+function handleFeatureOpenParenthesesCase({ Tokens, index }){
+  let endIndexOfFeature
+  const { token, type } = Tokens[index]
+  if (token === CLOSE_PARENTHESES){
+    endIndexOfFeature = index + 1
+  } else {
+    if (type === IDENTIFIER) {
+      handleExtraFormals({ Tokens, index: index + 1 })
+    } else {
+      console.log('Erro')
+      endIndexOfFeature = -1
+    }
+  }
+  return endIndexOfFeature
+}
+
+function handleExtraFormals({ Tokens, index }){
+  let endIndexOfFormal
+  const { token } = Tokens[index]
+  if (token === COLON){
+    const { type } = Tokens[index + 1]
+    if (type === IDENTIFIER){
+      const { token } = Tokens[index + 2]
+      if (token === COMMA){
+        const { type } = Tokens[index + 3]
+        if (type === IDENTIFIER){
+          endIndexOfFormal = handleExtraFormals({ Tokens, index: index + 4 })
+        } else {
+          console.log('Erro')
+          endIndexOfFormal = -1
+        }
+      } else {
+        // Formal case exit
+        endIndexOfFormal = index + 2
+      }
+    } else {
+      console.log('Erro')
+      endIndexOfFormal = -1
+    }
+  } else {
+    console.log('Erro')
+    endIndexOfFormal = -1
+  }
+  return endIndexOfFormal
+}
+
+function handleFeatureAfterCloseParenthesesCase({ Tokens, index }){
+  let endIndexOfFeature
+  let endIndexOfExpressionGroup1
+  const { token } = Tokens[index]
+  if (token === COLON){
+    const { type } = Tokens[index + 1]
+    if (type === IDENTIFIER){
+      const { token } = Tokens[index + 2]
+      if (token === OPEN_BRACES){
+        // TODO temporário
+        endIndexOfExpressionGroup1 = handleExpressionGroup1({ Tokens, index: index + 3 })
+        endIndexOfFeature = endIndexOfExpressionGroup1
+      } else {
+        console.log('Erro')
+        endIndexOfFeature = -1
+      }
+    } else {
+      console.log('Erro')
+      endIndexOfFeature = -1
+    }
+  } else {
+    console.log('Erro')
+    endIndexOfFeature = -1
+  }
+  return endIndexOfFeature
+}
+
+function handleFeatureColonCase({ Tokens, index }){
+  let endIndexOfFeature
+  let endIndexOfExpressionGroup1
+  const { type } = Tokens[index]
+  if (type === IDENTIFIER){
+    const { token } = Tokens[index + 1]
+    if (token === ASSIGNMENT) {
+      endIndexOfExpressionGroup1 = handleExpressionGroup1({ Tokens, index: index + 2 })
+      endIndexOfFeature = endIndexOfExpressionGroup1
+    } else {
+      endIndexOfFeature = index + 1
+    }
+  } else {
+    console.log('Erro')
+    endIndexOfFeature = -1
+  }
+  return endIndexOfFeature
+}
+
+function handleExpressionGroup1({ Tokens, index }){
+  let endIndexOfFeature
+  const { token } = Tokens[index]
+  if (token){
+    // Lógica aqui para o caso de hello mundo
+    console.log('Não ta pronto')
+    return 1
   } else {
     console.log('Erro')
     endIndexOfFeature = -1
