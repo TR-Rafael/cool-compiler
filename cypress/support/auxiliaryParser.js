@@ -1,32 +1,15 @@
 import {
   RESERVED_WORDS,
   SPECIAL_CHARACTERS,
-  DITTO_MARK,
   OPERATORS,
-  SPECIAL_NAMES,
-  BLOCK_COMMENT,
-  JUMP_LINE,
-  TAB,
-  EMPTY_STRING,
-  SPACE,
-  GREATER_THAN_SIGN
+  SPECIAL_NAMES
 } from './constantObjects'
 
-const arrayOfReservedWords = Object.values(RESERVED_WORDS)
-const arrayOfSpecialCharacter = Object.values(SPECIAL_CHARACTERS)
-const arrayOfOperators = Object.values(OPERATORS)
 
 const {
   IDENTIFIER,
-  OPERATOR,
-  RESERVED_WORD,
-  SPECIAL_CHARACTER,
   STRING
 } = SPECIAL_NAMES
-
-const {
-  CLOSE_BLOCK_OF_COMMENT
-} = BLOCK_COMMENT
 
 const {
   AT_SIGN,
@@ -102,14 +85,6 @@ async function auxiliaryParser({ Tokens, actualCase = '', index }) {
       switch (tokenOfDefault){
         case CLASS:
           return auxiliaryParser({ Tokens, index: index + 1, actualCase: CLASS })
-        case IDENTIFIER:
-          break
-        case OPERATOR:
-          break
-        case SPECIAL_CHARACTER:
-          break
-        case STRING:
-          break
         default:
           console.log('Error')
           return auxiliaryParser({ Tokens, index: -1, actualCase: 'ERROR' })
@@ -131,7 +106,7 @@ async function handleClass({ Tokens, index }){
         indexOfEndClass = idxAfterFeature
         break
       case OPEN_BRACES:
-        idxAfterFeature = await handleFeature({ Tokens, index: index+2 })
+        idxAfterFeature = await handleFeature({ Tokens, index: index + 2 })
         indexOfEndClass = idxAfterFeature
         break
       default:
@@ -151,7 +126,7 @@ function handleInherits({ Tokens, index }){
   if (type === IDENTIFIER) {
     const { token } = Tokens[index + 1]
     if (token === OPEN_BRACES){
-      endIndexOfInherits = index+2
+      endIndexOfInherits = index + 2
     } else {
       console.log('Erro')
       endIndexOfInherits = -1
@@ -184,7 +159,19 @@ async function handleFeature({ Tokens, index }){
         idxAfterCloseParenthesesCase = handleFeatureAfterCloseParenthesesCase({ Tokens,index: idxAfterOpenParenthesesCase })
         const { token } = Tokens[idxAfterCloseParenthesesCase]
         if (token === CLOSE_BRACES){
-          endIndexOfFeature = index + 1
+          const { token } = Tokens[idxAfterCloseParenthesesCase + 1]
+          if (token === SEMICOLON){
+            const { token } = Tokens[idxAfterCloseParenthesesCase + 2]
+            if (token === CLOSE_BRACES){
+              endIndexOfFeature = idxAfterCloseParenthesesCase + 3
+            } else {
+              console.log('Error')
+              endIndexOfFeature = -1
+            }
+          } else {
+            console.log('Error')
+            endIndexOfFeature = -1
+          }
         } else {
           console.log('Error')
           endIndexOfFeature = -1
@@ -256,7 +243,6 @@ function handleFeatureAfterCloseParenthesesCase({ Tokens, index }){
     if (type === IDENTIFIER){
       const { token } = Tokens[index + 2]
       if (token === OPEN_BRACES){
-        // TODO temporário
         endIndexOfExpressionGroup1 = handleExpressionGroup1({ Tokens, index: index + 3 })
         endIndexOfFeature = endIndexOfExpressionGroup1
       } else {
@@ -292,7 +278,6 @@ function handleFeatureColonCase({ Tokens, index }){
   }
   return endIndexOfFeature
 }
-// TODO agora o bagulho vai ficar sério
 
 function handleExpressionGroup1({ Tokens, index }){
   let endIndexOfFeature
@@ -301,9 +286,11 @@ function handleExpressionGroup1({ Tokens, index }){
     case FALSE:
       endIndexOfFeature = handleExpressionGroupBeta({ Tokens, index: index + 1 })
       break
+
     case TRUE:
       endIndexOfFeature = handleExpressionGroupBeta({ Tokens, index: index + 1 })
       break
+
     case NEW:
       const { type } = Tokens[index + 1]
       if (type === IDENTIFIER){
@@ -313,15 +300,19 @@ function handleExpressionGroup1({ Tokens, index }){
         endIndexOfFeature = -1
       }
       break
+
     case ISVOID:
       endIndexOfFeature = handleExpressionGroup1({ Tokens, index: index + 1 })
       break
+
     case NOT:
       endIndexOfFeature = handleExpressionGroup1({ Tokens, index: index + 1 })
       break
+
     case TILDE:
       endIndexOfFeature = handleExpressionGroup1({ Tokens, index: index + 1 })
       break
+
     case OPEN_PARENTHESES:
       endIndexOfFeature = handleExpressionGroup1({ Tokens, index: index + 1 })
       const { type: typeAfterOpenParentheses } = Tokens[endIndexOfFeature]
@@ -332,6 +323,7 @@ function handleExpressionGroup1({ Tokens, index }){
         endIndexOfFeature = -1
       }
       break
+
     case OPEN_BRACES:
       let conditional = true
       let indexAux = index + 1
@@ -353,18 +345,23 @@ function handleExpressionGroup1({ Tokens, index }){
         }
       }
       break
+
     case CASE:
       endIndexOfFeature = handleExpressionCase({ Tokens, index: index + 1 })
       break
+
     case LET:
       endIndexOfFeature = handleExpressionLet({ Tokens, index: index + 1 })
       break
+
     case WHILE:
       endIndexOfFeature = handleExpressionWhile({ Tokens, index: index + 1 })
       break
+
     case IF:
       endIndexOfFeature = handleExpressionIF({ Tokens, index: index + 1 })
       break
+
     default:
       const { type: actualTokenType } = Tokens[index]
       switch (actualTokenType) {
@@ -494,7 +491,6 @@ function handleInsideTheLet({ Tokens, index }){
       break
     case ASSIGNMENT:
       endIndexOfInsideTheLet = handleExpressionGroup1({ Tokens, index: index + 1 })
-      // TODO verificar se não da problema aqui
       // eslint-disable-next-line no-fallthrough
     case COMMA:
       let conditional = true
@@ -627,13 +623,6 @@ function handleExpressionOfIdentifier({ Tokens, index }){
         } else {
           indexAux = endIndexOfExpressionStartedWithID + 1
         }
-      }
-      const { token: tokenAfterExpressionSequence } = Tokens[endIndexOfExpressionStartedWithID]
-      if (tokenAfterExpressionSequence === CLOSE_PARENTHESES){
-        endIndexOfExpressionStartedWithID = handleExpressionGroupBeta({ Tokens, index: endIndexOfExpressionStartedWithID + 1 })
-      } else {
-        console.log('Erro')
-        endIndexOfExpressionStartedWithID = -1
       }
       break
     default:
