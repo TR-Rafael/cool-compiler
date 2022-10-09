@@ -95,7 +95,7 @@ async function auxiliaryParser({ Tokens, actualCase = '', index }) {
         case CLASS:
           return auxiliaryParser({ Tokens, index: index + 1, actualCase: CLASS })
         default:
-          console.log('Error')
+          auxPrintForError({ Tokens,index })
           return auxiliaryParser({ Tokens, index: -1, actualCase: 'ERROR' })
       }
   }
@@ -419,18 +419,6 @@ function handleExpressionGroup1({ Tokens, index }){
         default:
           auxPrintForError({ Tokens, index })
           endIndexOfFeature = -1
-          // const { type: actualTokenType } = Tokens[index]
-          // switch (actualTokenType) {
-          //   case STRING:
-          //     endIndexOfFeature = handleExpressionGroupBeta({ Tokens, index: index + 1 })
-          //     break
-          //   case IDENTIFIER:
-          //     endIndexOfFeature = handleExpressionOfIdentifier({ Tokens, index: index + 1 })
-          //     break
-          //   default:
-          // auxPrintForError({ Tokens, index })
-          // endIndexOfFeature = -1
-          // }
       }
   }
 
