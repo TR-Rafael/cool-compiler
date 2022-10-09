@@ -86,7 +86,7 @@ async function auxiliaryParser({ Tokens, actualCase = '', index }) {
       if (tokenOfClass === SEMICOLON){
         return auxiliaryParser({ Tokens, index: idx + 1, actualCase: '' })
       } else {
-        auxPrintForError({ Tokens, index: idx })
+        auxPrintForError({ Tokens, index: idx, session: 'Class switch' })
       }
       break
     default:
@@ -95,7 +95,7 @@ async function auxiliaryParser({ Tokens, actualCase = '', index }) {
         case CLASS:
           return auxiliaryParser({ Tokens, index: index + 1, actualCase: CLASS })
         default:
-          auxPrintForError({ Tokens,index })
+          auxPrintForError({ Tokens,index , session: 'Class switch 2' })
           return auxiliaryParser({ Tokens, index: -1, actualCase: 'ERROR' })
       }
   }
@@ -111,19 +111,24 @@ async function handleClass({ Tokens, index }){
     switch (token){
       case INHERITS:
         idxAfterInherits = handleInherits({ Tokens, index: index+2 })
-        idxAfterFeature = await handleFeature({ Tokens, index: idxAfterInherits })
+        idxAfterFeature = handleFeature({ Tokens, index: idxAfterInherits })
+        auxPrintForDebug({ Tokens, index: idxAfterFeature, extraInformation: 'Sai da feature  -INHERITS' })
+        // TODO talvez garantir aqui ';' e fechamento de brace - '}'
         indexOfEndClass = idxAfterFeature
         break
       case OPEN_BRACES:
-        idxAfterFeature = await handleFeature({ Tokens, index: index + 2 })
+        idxAfterFeature = handleFeature({ Tokens, index: index + 2 })
+        auxPrintForDebug({ Tokens, index: idxAfterFeature, extraInformation: 'Sai da feature  -Normal' })
+        // TODO talvez garantir aqui ';' e fechamento de brace - '}'
+
         indexOfEndClass = idxAfterFeature
         break
       default:
-        auxPrintForError({ Tokens, index: index +1 })
+        auxPrintForError({ Tokens, index: index +1 , session: 'Inside handleClass - switch' })
         indexOfEndClass = -1
     }
   } else {
-    auxPrintForError({ Tokens, index })
+    auxPrintForError({ Tokens, index , session: 'Inside handleClass - else' })
     indexOfEndClass = -1
   }
   return indexOfEndClass
@@ -137,23 +142,23 @@ function handleInherits({ Tokens, index }){
     if (token === OPEN_BRACES){
       endIndexOfInherits = index + 2
     } else {
-      auxPrintForError({ Tokens, index: index + 1 })
+      auxPrintForError({ Tokens, index: index + 1 , session: 'Inside handleInherits - 1' })
       endIndexOfInherits = -1
     }
   } else {
-    auxPrintForError({ Tokens, index })
+    auxPrintForError({ Tokens, index, session: 'Inside handleInherits - 2' })
     endIndexOfInherits = -1
   }
   return endIndexOfInherits
 }
 
-async function handleFeature({ Tokens, index }){
+function handleFeature({ Tokens, index }){
   let endIndexOfFeature
   let idxAfterColonCase
   let idxAfterOpenParenthesesCase
   let idxAfterCloseParenthesesCase
   const { token, type } = Tokens[index]
-
+  auxPrintForDebug({ Tokens, index, extraInformation: 'Cheguei na feature' })
   if (token === CLOSE_BRACES){
     endIndexOfFeature = index + 1
   } else if (type === IDENTIFIER) {
@@ -174,24 +179,24 @@ async function handleFeature({ Tokens, index }){
             if (token === CLOSE_BRACES){
               endIndexOfFeature = idxAfterCloseParenthesesCase + 3
             } else {
-              auxPrintForError({ Tokens, index: idxAfterCloseParenthesesCase + 2 })
+              auxPrintForError({ Tokens, index: idxAfterCloseParenthesesCase + 2, session: 'Inside handleFeature - Else \'}\' - 1' })
               endIndexOfFeature = -1
             }
           } else {
-            auxPrintForError({ Tokens, index: idxAfterCloseParenthesesCase + 1 })
+            auxPrintForError({ Tokens, index: idxAfterCloseParenthesesCase + 1, session: 'Inside handleFeature - Else \';\'' })
             endIndexOfFeature = -1
           }
         } else {
-          auxPrintForError({ Tokens, index: idxAfterCloseParenthesesCase })
+          auxPrintForError({ Tokens, index: idxAfterCloseParenthesesCase , session: 'Inside handleFeature - Else \'}\' - 2' })
           endIndexOfFeature = -1
         }
         break
       default:
-        auxPrintForError({ Tokens, index: index + 1 })
+        auxPrintForError({ Tokens, index: index + 1 , session: 'Inside handleFeature - Default' })
         endIndexOfFeature = -1
     }
   } else {
-    auxPrintForError({ Tokens, index })
+    auxPrintForError({ Tokens, index , session: 'Inside handleFeature - Else out' })
     endIndexOfFeature = -1
   }
   return endIndexOfFeature
@@ -204,9 +209,16 @@ function handleFeatureOpenParenthesesCase({ Tokens, index }){
     endIndexOfFeature = index + 1
   } else {
     if (type === IDENTIFIER) {
-      handleExtraFormals({ Tokens, index: index + 1 })
+      endIndexOfFeature = handleExtraFormals({ Tokens, index: index + 1 })
+      const { token } = Tokens[endIndexOfFeature]
+      if (token === CLOSE_PARENTHESES){
+        endIndexOfFeature = endIndexOfFeature + 1
+      } else {
+        auxPrintForError({ Tokens, index: endIndexOfFeature, session: 'Inside handleFeatureOpenParenthesesCase - 1' })
+        endIndexOfFeature = -1
+      }
     } else {
-      auxPrintForError({ Tokens, index: index + 1 })
+      auxPrintForError({ Tokens, index: index + 1, session: 'Inside handleFeatureOpenParenthesesCase - 2' })
       endIndexOfFeature = -1
     }
   }
@@ -225,7 +237,7 @@ function handleExtraFormals({ Tokens, index }){
         if (type === IDENTIFIER){
           endIndexOfFormal = handleExtraFormals({ Tokens, index: index + 4 })
         } else {
-          auxPrintForError({ Tokens, index: index + 3 })
+          auxPrintForError({ Tokens, index: index + 3 , session: 'Inside handleExtraFormals - 1' })
           endIndexOfFormal = -1
         }
       } else {
@@ -233,11 +245,11 @@ function handleExtraFormals({ Tokens, index }){
         endIndexOfFormal = index + 2
       }
     } else {
-      auxPrintForError({ Tokens, index: index + 1 })
+      auxPrintForError({ Tokens, index: index + 1 , session: 'Inside handleExtraFormals - 2' })
       endIndexOfFormal = -1
     }
   } else {
-    auxPrintForError({ Tokens, index })
+    auxPrintForError({ Tokens, index , session: 'Inside handleExtraFormals - 3' })
     endIndexOfFormal = -1
   }
   return endIndexOfFormal
@@ -255,15 +267,15 @@ function handleFeatureAfterCloseParenthesesCase({ Tokens, index }){
         endIndexOfExpressionGroup1 = handleExpressionGroup1({ Tokens, index: index + 3 })
         endIndexOfFeature = endIndexOfExpressionGroup1
       } else {
-        auxPrintForError({ Tokens, index: index + 2 })
+        auxPrintForError({ Tokens, index: index + 2 , session: 'Inside handleFeatureAfterCloseParenthesesCase - 1' })
         endIndexOfFeature = -1
       }
     } else {
-      auxPrintForError({ Tokens, index: index + 1 })
+      auxPrintForError({ Tokens, index: index + 1 , session: 'Inside handleFeatureAfterCloseParenthesesCase - 2' })
       endIndexOfFeature = -1
     }
   } else {
-    auxPrintForError({ Tokens, index })
+    auxPrintForError({ Tokens, index , session: 'Inside handleFeatureAfterCloseParenthesesCase - 3' })
     endIndexOfFeature = -1
   }
   return endIndexOfFeature
@@ -282,7 +294,7 @@ function handleFeatureColonCase({ Tokens, index }){
       endIndexOfFeature = index + 1
     }
   } else {
-    auxPrintForError({ Tokens, index })
+    auxPrintForError({ Tokens, index, session: 'Inside handleFeatureColonCase' })
     endIndexOfFeature = -1
   }
   return endIndexOfFeature
@@ -350,7 +362,7 @@ function handleExpressionGroup1({ Tokens, index }){
           if (type === IDENTIFIER){
             endIndexOfFeature = handleExpressionGroupBeta({ Tokens, index: index + 2 })
           } else {
-            auxPrintForError({ Tokens, index: index + 1 })
+            auxPrintForError({ Tokens, index: index + 1, session: 'Inside GroupExpression1 - NEW' })
             endIndexOfFeature = -1
           }
           break
@@ -369,11 +381,11 @@ function handleExpressionGroup1({ Tokens, index }){
 
         case OPEN_PARENTHESES:
           endIndexOfFeature = handleExpressionGroup1({ Tokens, index: index + 1 })
-          const { type: typeAfterOpenParentheses } = Tokens[endIndexOfFeature]
+          const { token: typeAfterOpenParentheses } = Tokens[endIndexOfFeature]
           if (typeAfterOpenParentheses === CLOSE_PARENTHESES){
             endIndexOfFeature = handleExpressionGroupBeta({ Tokens, index: endIndexOfFeature + 1 })
           } else {
-            auxPrintForError({ Tokens, index: endIndexOfFeature })
+            auxPrintForError({ Tokens, index: endIndexOfFeature, session: 'Inside GroupExpression1 - OPEN_PARENTHESES' })
             endIndexOfFeature = -1
           }
           break
@@ -382,7 +394,11 @@ function handleExpressionGroup1({ Tokens, index }){
           let conditional = true
           let indexAux = index + 1
           while (conditional){
+            auxPrintForDebug({ Tokens, index: indexAux, extraInformation: 'Start while' })
+
             indexAux = handleExpressionGroup1({ Tokens, index: indexAux })
+            auxPrintForDebug({ Tokens, index: indexAux, extraInformation: 'after group 1 - no while' })
+
             const { token: endOfExpressionToken } = Tokens[indexAux]
             if (endOfExpressionToken === SEMICOLON){
               const { token: endOfExpressionToken } = Tokens[indexAux + 1]
@@ -394,7 +410,7 @@ function handleExpressionGroup1({ Tokens, index }){
               }
             } else {
               conditional = false
-              auxPrintForError({ Tokens, index: indexAux })
+              auxPrintForError({ Tokens, index: indexAux , session: 'Inside GroupExpression1 - OPEN_BRACES' })
             }
           }
           endIndexOfFeature = indexAux
@@ -417,7 +433,7 @@ function handleExpressionGroup1({ Tokens, index }){
           break
 
         default:
-          auxPrintForError({ Tokens, index })
+          auxPrintForError({ Tokens, index , session: 'Inside GroupExpression1 - Generic' })
           endIndexOfFeature = -1
       }
   }
@@ -508,20 +524,20 @@ function handleExpressionLet({ Tokens, index }){
         if (token === IN){
           endIndexOfExpressionLETCase = handleExpressionGroup1({ Tokens, index: endIndexOfInsideTheLet + 1 })
         } else {
-          auxPrintForError({ Tokens, index: endIndexOfInsideTheLet })
+          auxPrintForError({ Tokens, index: endIndexOfInsideTheLet, session: 'Inside handleExpressionLet - 1' })
           endIndexOfExpressionLETCase = -1
         }
       } else {
-        auxPrintForError({ Tokens, index: index + 2 })
+        auxPrintForError({ Tokens, index: index + 2 , session: 'Inside handleExpressionLet - 2' })
         endIndexOfExpressionLETCase = -1
       }
     } else {
-      auxPrintForError({ Tokens, index: index + 1 })
+      auxPrintForError({ Tokens, index: index + 1 , session: 'Inside handleExpressionLet - 3' })
       endIndexOfExpressionLETCase = -1
     }
 
   } else {
-    auxPrintForError({ Tokens, index })
+    auxPrintForError({ Tokens, index, session: 'Inside handleExpressionLet - OUT' })
     endIndexOfExpressionLETCase = -1
   }
 
@@ -560,22 +576,22 @@ function handleInsideTheLet({ Tokens, index }){
                     conditionalForAssigment = false
                     break
                   default:
-                    auxPrintForError({ Tokens, index: auxIndexForAssigment + 4 })
+                    auxPrintForError({ Tokens, index: auxIndexForAssigment + 4 , session: 'Inside handleInsideTheLet - 1' })
                     conditionalForAssigment = false
                     auxIndexForAssigment = -1
                 }
               } else {
-                auxPrintForError({ Tokens, index: auxIndexForAssigment + 3 })
+                auxPrintForError({ Tokens, index: auxIndexForAssigment + 3 , session: 'Inside handleInsideTheLet - 2' })
                 conditionalForAssigment = false
                 auxIndexForAssigment = -1
               }
             } else {
-              auxPrintForError({ Tokens, index: auxIndexForAssigment + 2 })
+              auxPrintForError({ Tokens, index: auxIndexForAssigment + 2 , session: 'Inside handleInsideTheLet - 3' })
               conditionalForAssigment = false
               auxIndexForAssigment = -1
             }
           } else {
-            auxPrintForError({ Tokens, index: auxIndexForAssigment + 1 })
+            auxPrintForError({ Tokens, index: auxIndexForAssigment + 1, session: 'Inside handleInsideTheLet - 4' })
             conditionalForAssigment = false
             auxIndexForAssigment = -1
           }
