@@ -112,13 +112,11 @@ async function handleClass({ Tokens, index }){
       case INHERITS:
         idxAfterInherits = handleInherits({ Tokens, index: index+2 })
         idxAfterFeature = handleFeature({ Tokens, index: idxAfterInherits })
-        auxPrintForDebug({ Tokens, index: idxAfterFeature, extraInformation: 'Sai da feature  -INHERITS' })
         // TODO talvez garantir aqui ';' e fechamento de brace - '}'
         indexOfEndClass = idxAfterFeature
         break
       case OPEN_BRACES:
         idxAfterFeature = handleFeature({ Tokens, index: index + 2 })
-        auxPrintForDebug({ Tokens, index: idxAfterFeature, extraInformation: 'Sai da feature  -Normal' })
         // TODO talvez garantir aqui ';' e fechamento de brace - '}'
 
         indexOfEndClass = idxAfterFeature
@@ -158,7 +156,6 @@ function handleFeature({ Tokens, index }){
   let idxAfterOpenParenthesesCase
   let idxAfterCloseParenthesesCase
   const { token, type } = Tokens[index]
-  auxPrintForDebug({ Tokens, index, extraInformation: 'Cheguei na feature' })
   if (token === CLOSE_BRACES){
     endIndexOfFeature = index + 1
   } else if (type === IDENTIFIER) {
@@ -175,6 +172,7 @@ function handleFeature({ Tokens, index }){
         if (token === CLOSE_BRACES){
           const { token } = Tokens[idxAfterCloseParenthesesCase + 1]
           if (token === SEMICOLON){
+
             const { token } = Tokens[idxAfterCloseParenthesesCase + 2]
             if (token === CLOSE_BRACES){
               endIndexOfFeature = idxAfterCloseParenthesesCase + 3
@@ -265,6 +263,7 @@ function handleFeatureAfterCloseParenthesesCase({ Tokens, index }){
       const { token } = Tokens[index + 2]
       if (token === OPEN_BRACES){
         endIndexOfExpressionGroup1 = handleExpressionGroup1({ Tokens, index: index + 3 })
+        endIndexOfExpressionGroup1 = handleExpressionGroupBeta({ Tokens, index: endIndexOfExpressionGroup1 })
         endIndexOfFeature = endIndexOfExpressionGroup1
       } else {
         auxPrintForError({ Tokens, index: index + 2 , session: 'Inside handleFeatureAfterCloseParenthesesCase - 1' })
@@ -289,6 +288,7 @@ function handleFeatureColonCase({ Tokens, index }){
     const { token } = Tokens[index + 1]
     if (token === ASSIGNMENT) {
       endIndexOfExpressionGroup1 = handleExpressionGroup1({ Tokens, index: index + 2 })
+      endIndexOfExpressionGroup1 = handleExpressionGroupBeta({ Tokens, index: endIndexOfExpressionGroup1 })
       endIndexOfFeature = endIndexOfExpressionGroup1
     } else {
       endIndexOfFeature = index + 1
@@ -309,6 +309,7 @@ function handleExpressionGroup1({ Tokens, index }){
       break
     case IDENTIFIER:
       endIndexOfFeature = handleExpressionOfIdentifier({ Tokens, index: index + 1 })
+      endIndexOfFeature = handleExpressionGroupBeta({ Tokens, index: endIndexOfFeature })
       break
     default:
       switch (token){
@@ -369,24 +370,32 @@ function handleExpressionGroup1({ Tokens, index }){
 
         case ISVOID:
           endIndexOfFeature = handleExpressionGroup1({ Tokens, index: index + 1 })
+          endIndexOfFeature = handleExpressionGroupBeta({ Tokens, index: endIndexOfFeature })
           break
 
         case NOT:
           endIndexOfFeature = handleExpressionGroup1({ Tokens, index: index + 1 })
+          endIndexOfFeature = handleExpressionGroupBeta({ Tokens, index: endIndexOfFeature })
           break
 
         case TILDE:
           endIndexOfFeature = handleExpressionGroup1({ Tokens, index: index + 1 })
+          endIndexOfFeature = handleExpressionGroupBeta({ Tokens, index: endIndexOfFeature })
           break
 
         case OPEN_PARENTHESES:
-          endIndexOfFeature = handleExpressionGroup1({ Tokens, index: index + 1 })
-          const { token: typeAfterOpenParentheses } = Tokens[endIndexOfFeature]
+          const { token: typeAfterOpenParentheses } = Tokens[index + 1]
           if (typeAfterOpenParentheses === CLOSE_PARENTHESES){
-            endIndexOfFeature = handleExpressionGroupBeta({ Tokens, index: endIndexOfFeature + 1 })
+            endIndexOfFeature = handleExpressionGroupBeta({ Tokens, index: index + 2 })
           } else {
-            auxPrintForError({ Tokens, index: endIndexOfFeature, session: 'Inside GroupExpression1 - OPEN_PARENTHESES' })
-            endIndexOfFeature = -1
+            endIndexOfFeature = handleExpressionGroup1({ Tokens, index: index + 1 })
+            const { token: typeAfterOpenParentheses2 } = Tokens[endIndexOfFeature]
+            if (typeAfterOpenParentheses2 === CLOSE_PARENTHESES){
+              endIndexOfFeature = handleExpressionGroupBeta({ Tokens, index: endIndexOfFeature + 1 })
+            } else {
+              auxPrintForError({ Tokens, index: endIndexOfFeature, session: 'Inside GroupExpression1 - OPEN_PARENTHESES' })
+              endIndexOfFeature = -1
+            }
           }
           break
 
@@ -394,17 +403,16 @@ function handleExpressionGroup1({ Tokens, index }){
           let conditional = true
           let indexAux = index + 1
           while (conditional){
-            auxPrintForDebug({ Tokens, index: indexAux, extraInformation: 'Start while' })
-
             indexAux = handleExpressionGroup1({ Tokens, index: indexAux })
-            auxPrintForDebug({ Tokens, index: indexAux, extraInformation: 'after group 1 - no while' })
+            indexAux = handleExpressionGroupBeta({ Tokens, index: indexAux })
 
             const { token: endOfExpressionToken } = Tokens[indexAux]
+
             if (endOfExpressionToken === SEMICOLON){
               const { token: endOfExpressionToken } = Tokens[indexAux + 1]
               if (endOfExpressionToken === CLOSE_BRACES){
                 conditional = false
-                indexAux = handleExpressionGroupBeta({ Tokens, index: indexAux + 2 })
+                indexAux = indexAux + 2
               } else {
                 indexAux++
               }
@@ -413,23 +421,31 @@ function handleExpressionGroup1({ Tokens, index }){
               auxPrintForError({ Tokens, index: indexAux , session: 'Inside GroupExpression1 - OPEN_BRACES' })
             }
           }
+          indexAux = handleExpressionGroupBeta({ Tokens, index: indexAux })
           endIndexOfFeature = indexAux
           break
 
         case CASE:
           endIndexOfFeature = handleExpressionCase({ Tokens, index: index + 1 })
+          endIndexOfFeature = handleExpressionGroupBeta({ Tokens, index: endIndexOfFeature })
           break
 
         case LET:
           endIndexOfFeature = handleExpressionLet({ Tokens, index: index + 1 })
+          endIndexOfFeature = handleExpressionGroupBeta({ Tokens, index: endIndexOfFeature })
+
           break
 
         case WHILE:
           endIndexOfFeature = handleExpressionWhile({ Tokens, index: index + 1 })
+          endIndexOfFeature = handleExpressionGroupBeta({ Tokens, index: endIndexOfFeature })
+
           break
 
         case IF:
           endIndexOfFeature = handleExpressionIF({ Tokens, index: index + 1 })
+          endIndexOfFeature = handleExpressionGroupBeta({ Tokens, index: endIndexOfFeature })
+
           break
 
         default:
@@ -448,6 +464,7 @@ function handleExpressionCase({ Tokens, index }){
   let endIndexOfExpressionCASECase
 
   endIndexOfCASE = handleExpressionGroup1({ Tokens, index })
+  endIndexOfCASE = handleExpressionGroupBeta({ Tokens, index: endIndexOfCASE })
   const { token } = Tokens[endIndexOfCASE]
   if (token === OF){
     let conditional = true
@@ -462,6 +479,7 @@ function handleExpressionCase({ Tokens, index }){
             const { type: typeInsideTheSecondIdentifier } = Tokens[indexAux + 3]
             if (typeInsideTheSecondIdentifier === IMPLICATION){
               endIndexOfOF = handleExpressionGroup1({ Tokens, index: indexAux + 4 })
+              endIndexOfOF = handleExpressionGroupBeta({ Tokens, index: endIndexOfOF })
               const { type: typeInsideTheFinishedOF } = Tokens[endIndexOfOF]
               if (typeInsideTheFinishedOF === SEMICOLON){
                 const { token: tokenAfterSemicolon, type: typeAfterSemicolon } = Tokens[endIndexOfOF + 1]
@@ -523,6 +541,7 @@ function handleExpressionLet({ Tokens, index }){
         const { token } = Tokens[endIndexOfInsideTheLet]
         if (token === IN){
           endIndexOfExpressionLETCase = handleExpressionGroup1({ Tokens, index: endIndexOfInsideTheLet + 1 })
+          endIndexOfExpressionLETCase = handleExpressionGroupBeta({ Tokens, index: endIndexOfExpressionLETCase })
         } else {
           auxPrintForError({ Tokens, index: endIndexOfInsideTheLet, session: 'Inside handleExpressionLet - 1' })
           endIndexOfExpressionLETCase = -1
@@ -554,6 +573,7 @@ function handleInsideTheLet({ Tokens, index }){
       break
     case ASSIGNMENT:
       endIndexOfInsideTheLet = handleExpressionGroup1({ Tokens, index: index + 1 })
+      endIndexOfInsideTheLet = handleExpressionGroupBeta({ Tokens, index: endIndexOfInsideTheLet })
 
       let auxIndexForAssigment = endIndexOfInsideTheLet
       while (conditionalForAssigment){
@@ -569,6 +589,7 @@ function handleInsideTheLet({ Tokens, index }){
                 switch (token) {
                   case ASSIGNMENT:
                     auxIndexForAssigment = handleExpressionGroup1({ Tokens, index: auxIndexForAssigment + 5 })
+                    auxIndexForAssigment = handleExpressionGroupBeta({ Tokens, index: auxIndexForAssigment })
                     conditionalForAssigment = true
                     break
                   case IN:
@@ -618,6 +639,7 @@ function handleInsideTheLet({ Tokens, index }){
                 switch (token) {
                   case ASSIGNMENT:
                     auxIndex = handleExpressionGroup1({ Tokens, index: auxIndex + 5 })
+                    auxIndex = handleExpressionGroupBeta({ Tokens, index: auxIndex })
                     break
                   case IN:
                     auxIndex = auxIndex + 4
@@ -663,9 +685,12 @@ function handleExpressionWhile({ Tokens, index }){
   let endIndexOfExpressionWHILECase
 
   endIndexOfWHILE = handleExpressionGroup1({ Tokens, index: index })
+  endIndexOfWHILE = handleExpressionGroupBeta({ Tokens, index: endIndexOfWHILE })
+
   const { token } = Tokens[endIndexOfWHILE]
   if (token === LOOP){
     endIndexOfLOOP = handleExpressionGroup1({ Tokens, index: endIndexOfWHILE + 1 })
+    endIndexOfLOOP = handleExpressionGroupBeta({ Tokens, index: endIndexOfLOOP })
     const { token } = Tokens[endIndexOfLOOP]
     if (token === POOL){
       endIndexOfExpressionWHILECase = endIndexOfLOOP + 1
@@ -688,12 +713,17 @@ function handleExpressionIF({ Tokens, index }){
   let endIndexOfExpressionIFCase
 
   endIndexOfIF = handleExpressionGroup1({ Tokens, index: index })
+  endIndexOfIF = handleExpressionGroupBeta({ Tokens, index: endIndexOfIF })
   const { token } = Tokens[endIndexOfIF]
   if (token === THEN){
     endIndexOfTHEN = handleExpressionGroup1({ Tokens, index: endIndexOfIF + 1 })
+    endIndexOfTHEN = handleExpressionGroupBeta({ Tokens, index: endIndexOfTHEN })
+
     const { token } = Tokens[endIndexOfTHEN]
     if (token === ELSE){
       endIndexOfELSE = handleExpressionGroup1({ Tokens, index: endIndexOfTHEN + 1 })
+      endIndexOfELSE = handleExpressionGroupBeta({ Tokens, index: endIndexOfELSE })
+
       const { token } = Tokens[endIndexOfELSE]
       if (token === FI){
         endIndexOfExpressionIFCase = endIndexOfELSE + 1
@@ -715,36 +745,27 @@ function handleExpressionIF({ Tokens, index }){
 
 function handleExpressionOfIdentifier({ Tokens, index }){
   let endIndexOfExpressionStartedWithID
-  const { token } = Tokens[index]
+  const { token, type } = Tokens[index]
   switch (token) {
     case DOT:
       endIndexOfExpressionStartedWithID = handleExpressionGroupBeta({ Tokens, index })
       break
     case ASSIGNMENT:
       endIndexOfExpressionStartedWithID = handleExpressionGroup1({ Tokens, index: index + 1 })
+      endIndexOfExpressionStartedWithID = handleExpressionGroupBeta({ Tokens, index: endIndexOfExpressionStartedWithID })
+      break
+    case COMMA:
+      endIndexOfExpressionStartedWithID = index + 1
       break
     case OPEN_PARENTHESES:
-      let conditional = true
       let indexAux = index + 1
-      while (conditional){
-        const { token: tokenAfterExpression } = Tokens[indexAux]
-        if (tokenAfterExpression === CLOSE_PARENTHESES){
-          conditional = false
-          break
-        }
-        indexAux = handleExpressionGroup1({ Tokens, index: indexAux })
-        if (tokenAfterExpression === CLOSE_PARENTHESES){
-          conditional = false
-        } else if (tokenAfterExpression === COMMA){
-          indexAux++
-        } else {
-          conditional = false
-        }
-      }
-      endIndexOfExpressionStartedWithID = handleExpressionGroupBeta({ Tokens, index: indexAux + 1 })
+      indexAux = handleExpressionGroup1({ Tokens, index: indexAux - 1 })
+
+      endIndexOfExpressionStartedWithID = handleExpressionGroupBeta({ Tokens, index: indexAux })
       break
     default:
-      endIndexOfExpressionStartedWithID = handleExpressionGroupBeta({ Tokens, index: index })
+
+      endIndexOfExpressionStartedWithID = handleExpressionGroupBeta({ Tokens, index })
 
   }
   return endIndexOfExpressionStartedWithID
@@ -757,24 +778,35 @@ function handleExpressionGroupBeta({ Tokens, index }){
   switch (token){
     case EQUAL_SIGN:
       endIndexOfExprBeta = handleExpressionGroup1({ Tokens, index: indexAux })
+      endIndexOfExprBeta = handleExpressionGroupBeta({ Tokens, index: endIndexOfExprBeta })
       break
     case MINUS_SIGN:
       endIndexOfExprBeta = handleExpressionGroup1({ Tokens, index: indexAux })
+      endIndexOfExprBeta = handleExpressionGroupBeta({ Tokens, index: endIndexOfExprBeta })
       break
     case LESS_THAN_OR_EQUAL_SIGN:
       endIndexOfExprBeta = handleExpressionGroup1({ Tokens, index: indexAux })
+      endIndexOfExprBeta = handleExpressionGroupBeta({ Tokens, index: endIndexOfExprBeta })
+
       break
     case LESS_THAN_SIGN:
       endIndexOfExprBeta = handleExpressionGroup1({ Tokens, index: indexAux })
+      endIndexOfExprBeta = handleExpressionGroupBeta({ Tokens, index: endIndexOfExprBeta })
+
       break
     case DIVISION_SIGN:
       endIndexOfExprBeta = handleExpressionGroup1({ Tokens, index: indexAux })
+      endIndexOfExprBeta = handleExpressionGroupBeta({ Tokens, index: endIndexOfExprBeta })
+
       break
     case MULTIPLICATION_SIGN:
       endIndexOfExprBeta = handleExpressionGroup1({ Tokens, index: indexAux })
+      endIndexOfExprBeta = handleExpressionGroupBeta({ Tokens, index: endIndexOfExprBeta })
+
       break
     case PLUS_SIGN:
       endIndexOfExprBeta = handleExpressionGroup1({ Tokens, index: indexAux })
+      endIndexOfExprBeta = handleExpressionGroupBeta({ Tokens, index: endIndexOfExprBeta })
       break
     case AT_SIGN:
       const typeAtSign = Tokens[indexAux].type
@@ -790,6 +822,8 @@ function handleExpressionGroupBeta({ Tokens, index }){
       const { type: typeAtDot } = Tokens[indexAux]
       if (typeAtDot === IDENTIFIER){
         endIndexOfExprBeta = handleExpressionGroup1({ Tokens, index: indexAux })
+        endIndexOfExprBeta = handleExpressionGroupBeta({ Tokens, index: endIndexOfExprBeta })
+
       } else {
         auxPrintForError({ Tokens, index: indexAux })
         endIndexOfExprBeta = -1
