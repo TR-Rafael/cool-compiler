@@ -5,6 +5,7 @@ const title = 'Parser analyzer'
 // change the value of the `pathForFileInCOOL ` variable to the path of the file you want to compile.
 // EX: 'cypress/fixtures/examples/helloWorld.cl'
 
+// const pathForFileInCOOL = 'cypress/fixtures/examples/palindrome.cl'
 const pathForFileInCOOL = 'cypress/fixtures/examples/cool.cl'
 describe(title, () => {
   it(title, () => {

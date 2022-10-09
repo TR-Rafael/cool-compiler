@@ -29,7 +29,8 @@ const {
 } = BLOCK_COMMENT
 
 const {
-  OPEN_PARENTHESES
+  OPEN_PARENTHESES,
+  SEMICOLON
 } = SPECIAL_CHARACTERS
 
 const {
@@ -48,7 +49,7 @@ const {
  * @returns {[tokens]} - Token array.
  */
 function lexiconAnalyzer({ codeRaw }) {
-  
+  console.log('arrayOfReservedWords:', arrayOfReservedWords)
   let dittoMarkCounter = 0
   let line = 1
   let cacheOfAnalyser = EMPTY_STRING
@@ -150,6 +151,11 @@ function lexiconAnalyzer({ codeRaw }) {
                   && ![SPACE, TAB].includes(cacheOfAnalyserWithNewChar)
                   && !isInlineComment
               ){
+                // console.log({
+                //   line,
+                //   token: cacheOfAnalyser,
+                //   type: IDENTIFIER
+                // }, 'case TAB')
                 tokens.push({
                   line,
                   token: cacheOfAnalyser,
@@ -179,6 +185,7 @@ function lexiconAnalyzer({ codeRaw }) {
               break
 
             default:
+              // console.log('Default:',cacheOfAnalyserWithNewChar, index)
               if (dittoMarkCounter === 0
                   && arrayOfOperators.includes(cacheOfAnalyserWithNewChar)
                   && !isInlineComment
@@ -192,7 +199,7 @@ function lexiconAnalyzer({ codeRaw }) {
               } else if (
                 arrayOfReservedWords.includes(cacheOfAnalyserWithNewChar)
                 && index + 1 !== code.length
-                && [SPACE, JUMP_LINE].includes(code[index + 1])
+                && [SPACE, JUMP_LINE, SEMICOLON].includes(code[index + 1])
                 && dittoMarkCounter === 0
                 && !isInlineComment
               ){
@@ -207,6 +214,11 @@ function lexiconAnalyzer({ codeRaw }) {
                   && dittoMarkCounter === 0
               ){
                 if (cacheOfAnalyserWithNewChar.length > 1 && !isInlineComment){
+                  // console.log({
+                  //   line,
+                  //   token: cacheOfAnalyser,
+                  //   type: IDENTIFIER
+                  // }, 'Case Default')
                   tokens.push({
                     line,
                     token: cacheOfAnalyser,
@@ -221,7 +233,20 @@ function lexiconAnalyzer({ codeRaw }) {
                   })
                 }
                 cacheOfAnalyser = EMPTY_STRING
+              } else if (cacheOfAnalyserWithNewChar.length === 1 && !isNaN(char)){
+                // console.log({
+                //   line,
+                //   token: char,
+                //   type: IDENTIFIER
+                // }, 'New Case')
+                tokens.push({
+                  line,
+                  token: char,
+                  type: IDENTIFIER
+                })
+                cacheOfAnalyser = EMPTY_STRING
               } else if (!isInlineComment){
+
                 cacheOfAnalyser = cacheOfAnalyserWithNewChar
               }
           }
