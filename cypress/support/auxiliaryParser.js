@@ -182,6 +182,11 @@ function handleFeature({ Tokens, index }){
     switch (token){
       case COLON:
         idxAfterColonCase = handleFeatureColonCase({ Tokens,index: index + 2 })
+        const localToken = Tokens[idxAfterColonCase].token
+        auxPrintForDebug({ Tokens, index: idxAfterColonCase , extraInformation: 'Feature COLON' })
+        if (localToken === SEMICOLON){
+          idxAfterColonCase = idxAfterColonCase + 1
+        }
         endIndexOfFeature = idxAfterColonCase
         break
       case OPEN_PARENTHESES:
@@ -194,15 +199,7 @@ function handleFeature({ Tokens, index }){
           auxPrintForDebug({ Tokens, index: idxAfterCloseParenthesesCase + 1 , extraInformation: 'Antes de dar ruim - 2' })
           if (token === SEMICOLON){
             auxPrintForDebug({ Tokens, index: idxAfterCloseParenthesesCase + 2 , extraInformation: 'Antes de dar ruim - 3' })
-            // TODO to testando se tem erro aqui - calma
             endIndexOfFeature = idxAfterCloseParenthesesCase + 2
-            // const { token } = Tokens[idxAfterCloseParenthesesCase + 2]
-            // if (token === CLOSE_BRACES){
-            //   endIndexOfFeature = idxAfterCloseParenthesesCase + 3
-            // } else {
-            //   auxPrintForError({ Tokens, index: idxAfterCloseParenthesesCase + 2, session: 'Inside handleFeature - Else \'}\' - 1' })
-            //   endIndexOfFeature = -1
-            // }
           } else {
             auxPrintForError({ Tokens, index: idxAfterCloseParenthesesCase + 1, session: 'Inside handleFeature - Else \';\'' })
             endIndexOfFeature = -1
@@ -220,6 +217,8 @@ function handleFeature({ Tokens, index }){
     auxPrintForError({ Tokens, index , session: 'Inside handleFeature - Else out' })
     endIndexOfFeature = -1
   }
+
+
   return endIndexOfFeature
 }
 
@@ -867,15 +866,11 @@ function handleExpressionGroupBeta({ Tokens, index }){
       // eslint-disable-next-line no-fallthrough
     case DOT:
       const { type: typeAtDot } = Tokens[indexAux]
-      console.log('Entrei no dot do beta',Tokens[indexAux], 'index',indexAux)
 
       if (typeAtDot === IDENTIFIER){
 
         endIndexOfExprBeta = handleExpressionOfIdentifier({ Tokens, index: indexAux + 1 })
         endIndexOfExprBeta = handleExpressionGroupBeta({ Tokens, index: endIndexOfExprBeta })
-        console.log('SAI no dot do beta',Tokens[endIndexOfExprBeta], 'index',endIndexOfExprBeta)
-        // endIndexOfExprBeta = handleExpressionGroup1({ Tokens, index: indexAux })
-        // endIndexOfExprBeta = handleExpressionGroupBeta({ Tokens, index: endIndexOfExprBeta })
 
       } else {
         auxPrintForError({ Tokens, index: indexAux })
@@ -884,7 +879,6 @@ function handleExpressionGroupBeta({ Tokens, index }){
       break
     default:
       if (type === IDENTIFIER){
-        console.log('Entrei')
         endIndexOfExprBeta = indexAux
       } else {
         endIndexOfExprBeta = index

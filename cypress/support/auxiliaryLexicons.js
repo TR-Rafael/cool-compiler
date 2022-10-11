@@ -49,7 +49,6 @@ const {
  * @returns {[tokens]} - Token array.
  */
 function lexiconAnalyzer({ codeRaw }) {
-  console.log('arrayOfReservedWords:', arrayOfReservedWords)
   let dittoMarkCounter = 0
   let line = 1
   let cacheOfAnalyser = EMPTY_STRING
@@ -151,11 +150,6 @@ function lexiconAnalyzer({ codeRaw }) {
                   && ![SPACE, TAB].includes(cacheOfAnalyserWithNewChar)
                   && !isInlineComment
               ){
-                // console.log({
-                //   line,
-                //   token: cacheOfAnalyser,
-                //   type: IDENTIFIER
-                // }, 'case TAB')
                 tokens.push({
                   line,
                   token: cacheOfAnalyser,
@@ -185,11 +179,15 @@ function lexiconAnalyzer({ codeRaw }) {
               break
 
             default:
-              // console.log('Default:',cacheOfAnalyserWithNewChar, index)
               if (dittoMarkCounter === 0
                   && arrayOfOperators.includes(cacheOfAnalyserWithNewChar)
                   && !isInlineComment
               ){
+                console.log({
+                  line,
+                  token: cacheOfAnalyserWithNewChar,
+                  type: OPERATOR
+                }, 'case Operator')
                 tokens.push({
                   line,
                   token: cacheOfAnalyserWithNewChar,
@@ -234,11 +232,6 @@ function lexiconAnalyzer({ codeRaw }) {
                 }
                 cacheOfAnalyser = EMPTY_STRING
               } else if (cacheOfAnalyserWithNewChar.length === 1 && !isNaN(char)){
-                // console.log({
-                //   line,
-                //   token: char,
-                //   type: IDENTIFIER
-                // }, 'New Case')
                 tokens.push({
                   line,
                   token: char,
@@ -246,8 +239,23 @@ function lexiconAnalyzer({ codeRaw }) {
                 })
                 cacheOfAnalyser = EMPTY_STRING
               } else if (!isInlineComment){
-
                 cacheOfAnalyser = cacheOfAnalyserWithNewChar
+                if (
+                  cacheOfAnalyserWithNewChar.length > 1 &&
+                    arrayOfOperators.includes(cacheOfAnalyserWithNewChar.slice(-1))
+                ){
+                  tokens.push({
+                    line,
+                    token: cacheOfAnalyserWithNewChar.slice(0,-1),
+                    type: IDENTIFIER
+                  })
+                  tokens.push({
+                    line,
+                    token: char,
+                    type: OPERATOR
+                  })
+                  cacheOfAnalyser = EMPTY_STRING
+                }
               }
           }
         } else if (index === indexOfEndOfBlockComment){

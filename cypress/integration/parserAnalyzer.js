@@ -6,7 +6,7 @@ const title = 'Parser analyzer'
 // EX: 'cypress/fixtures/examples/helloWorld.cl'
 
 // const pathForFileInCOOL = 'cypress/fixtures/examples/palindrome.cl'
-const pathForFileInCOOL = 'cypress/fixtures/examples/cool.cl'
+const pathForFileInCOOL = 'cypress/fixtures/examples/primes.cl'
 describe(title, () => {
   it(title, () => {
     cy.readFile(pathForFileInCOOL).then(async codeRaw => {
