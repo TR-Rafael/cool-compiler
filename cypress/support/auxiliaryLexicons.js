@@ -69,6 +69,17 @@ function lexiconAnalyzer({ codeRaw }) {
         if (indexOfEndOfBlockComment === -1){
           switch (char) {
             case JUMP_LINE:
+              if (dittoMarkCounter === 0
+                  && !isInlineComment
+                  && cacheOfAnalyserWithNewChar.length > 1
+              ){
+                tokens.push({
+                  line,
+                  token: cacheOfAnalyser,
+                  type: IDENTIFIER
+                })
+              }
+
               if (isInlineComment){
                 isInlineComment = false
               }
@@ -146,9 +157,12 @@ function lexiconAnalyzer({ codeRaw }) {
 
             case SPACE :
             case TAB:
+              if (isInlineComment){
+                break
+              }
               if (dittoMarkCounter === 0
                   && ![SPACE, TAB].includes(cacheOfAnalyserWithNewChar)
-                  && !isInlineComment
+                  && !arrayOfReservedWords.includes(cacheOfAnalyser)
               ){
                 tokens.push({
                   line,
@@ -156,9 +170,9 @@ function lexiconAnalyzer({ codeRaw }) {
                   type: IDENTIFIER
                 })
                 cacheOfAnalyser = EMPTY_STRING
-              } else if (dittoMarkCounter !== 0 && !isInlineComment){
+              } else if (dittoMarkCounter !== 0){
                 cacheOfAnalyser = cacheOfAnalyserWithNewChar
-              } else if (!isInlineComment){
+              } else {
                 cacheOfAnalyser = EMPTY_STRING
               }
               break
@@ -183,11 +197,6 @@ function lexiconAnalyzer({ codeRaw }) {
                   && arrayOfOperators.includes(cacheOfAnalyserWithNewChar)
                   && !isInlineComment
               ){
-                console.log({
-                  line,
-                  token: cacheOfAnalyserWithNewChar,
-                  type: OPERATOR
-                }, 'case Operator')
                 tokens.push({
                   line,
                   token: cacheOfAnalyserWithNewChar,
@@ -197,7 +206,7 @@ function lexiconAnalyzer({ codeRaw }) {
               } else if (
                 arrayOfReservedWords.includes(cacheOfAnalyserWithNewChar)
                 && index + 1 !== code.length
-                && [SPACE, JUMP_LINE, SEMICOLON].includes(code[index + 1])
+                && [SPACE, JUMP_LINE, SEMICOLON, TAB].includes(code[index + 1])
                 && dittoMarkCounter === 0
                 && !isInlineComment
               ){
@@ -212,11 +221,6 @@ function lexiconAnalyzer({ codeRaw }) {
                   && dittoMarkCounter === 0
               ){
                 if (cacheOfAnalyserWithNewChar.length > 1 && !isInlineComment){
-                  // console.log({
-                  //   line,
-                  //   token: cacheOfAnalyser,
-                  //   type: IDENTIFIER
-                  // }, 'Case Default')
                   tokens.push({
                     line,
                     token: cacheOfAnalyser,
@@ -231,13 +235,17 @@ function lexiconAnalyzer({ codeRaw }) {
                   })
                 }
                 cacheOfAnalyser = EMPTY_STRING
-              } else if (cacheOfAnalyserWithNewChar.length === 1 && !isNaN(char)){
-                tokens.push({
-                  line,
-                  token: char,
-                  type: IDENTIFIER
-                })
-                cacheOfAnalyser = EMPTY_STRING
+              } else if (!isNaN(char) && !isInlineComment){
+                if (isNaN(code[index + 1])){
+                  tokens.push({
+                    line,
+                    token: cacheOfAnalyserWithNewChar,
+                    type: IDENTIFIER
+                  })
+                  cacheOfAnalyser = EMPTY_STRING
+                } else {
+                  cacheOfAnalyser = cacheOfAnalyserWithNewChar
+                }
               } else if (!isInlineComment){
                 cacheOfAnalyser = cacheOfAnalyserWithNewChar
                 if (
@@ -256,6 +264,12 @@ function lexiconAnalyzer({ codeRaw }) {
                   })
                   cacheOfAnalyser = EMPTY_STRING
                 }
+              } else if (cacheOfAnalyserWithNewChar.length > 1 && [SPACE, JUMP_LINE, TAB].includes(char)){
+                tokens.push({
+                  line,
+                  token: cacheOfAnalyserWithNewChar.slice(0,-1),
+                  type: IDENTIFIER
+                })
               }
           }
         } else if (index === indexOfEndOfBlockComment){
