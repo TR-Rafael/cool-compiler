@@ -204,7 +204,7 @@ function lexiconAnalyzer({ codeRaw }) {
                 })
                 cacheOfAnalyser = EMPTY_STRING
               } else if (
-                arrayOfReservedWords.includes(cacheOfAnalyserWithNewChar)
+                arrayOfReservedWords.includes(cacheOfAnalyserWithNewChar.toLowerCase())
                 && index + 1 !== code.length
                 && [SPACE, JUMP_LINE, SEMICOLON, TAB].includes(code[index + 1])
                 && dittoMarkCounter === 0
@@ -212,7 +212,7 @@ function lexiconAnalyzer({ codeRaw }) {
               ){
                 tokens.push({
                   line,
-                  token: cacheOfAnalyserWithNewChar,
+                  token: cacheOfAnalyserWithNewChar.toLowerCase(),
                   type: RESERVED_WORD
                 })
                 cacheOfAnalyser = EMPTY_STRING
