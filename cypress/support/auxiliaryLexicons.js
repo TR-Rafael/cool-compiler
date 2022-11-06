@@ -221,11 +221,19 @@ function lexiconAnalyzer({ codeRaw }) {
                   && dittoMarkCounter === 0
               ){
                 if (cacheOfAnalyserWithNewChar.length > 1 && !isInlineComment){
-                  tokens.push({
-                    line,
-                    token: cacheOfAnalyser,
-                    type: IDENTIFIER
-                  })
+                  if (arrayOfReservedWords.includes(cacheOfAnalyser)){
+                    tokens.push({
+                      line,
+                      token: cacheOfAnalyser,
+                      type: RESERVED_WORD
+                    })
+                  } else {
+                    tokens.push({
+                      line,
+                      token: cacheOfAnalyser,
+                      type: IDENTIFIER
+                    })
+                  }
                 }
                 if (!isInlineComment){
                   tokens.push({
@@ -236,7 +244,9 @@ function lexiconAnalyzer({ codeRaw }) {
                 }
                 cacheOfAnalyser = EMPTY_STRING
               } else if (!isNaN(char) && !isInlineComment){
-                if (isNaN(code[index + 1])){
+                if ([SPACE, JUMP_LINE, SEMICOLON, TAB].includes(code[index + 1]
+                    && dittoMarkCounter === 0
+                )){
                   tokens.push({
                     line,
                     token: cacheOfAnalyserWithNewChar,

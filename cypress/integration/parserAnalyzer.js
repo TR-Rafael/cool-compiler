@@ -6,7 +6,7 @@ const title = 'Parser analyzer'
 // EX: 'cypress/fixtures/examples/helloWorld.cl'
 
 // const pathForFileInCOOL = 'cypress/fixtures/examples/palindrome.cl'
-const pathForFileInCOOL = 'cypress/fixtures/examples/random.cl'
+const pathForFileInCOOL = 'cypress/fixtures/examples/primes.cl'
 describe(title, () => {
   it(title, () => {
     console.log(pathForFileInCOOL.split('/').slice(-1)[0])

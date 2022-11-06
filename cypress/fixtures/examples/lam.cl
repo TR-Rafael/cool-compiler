@@ -253,9 +253,9 @@ class Lambda inherits Expr {
       out_int(n);
       out_string(" inherits Closure {\n");
       out_string("  apply(y : EvalObject) : EvalObject {\n");
-      out_string("    { out_string(\"Applying closure ");
+      out_string("    { out_string('Applying closure ");
       out_int(n);
-      out_string("\\n\");\n");
+      out_string("\\n');\n");
       out_string("      x <- y;\n");
       body.gen_code(env.add(arg), closures);
       out_string(";}};\n");
