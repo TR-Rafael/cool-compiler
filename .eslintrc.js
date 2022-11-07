@@ -37,8 +37,7 @@ module.exports = {
     }
   ],
   parserOptions: {
-    ecmaVersion: 2020,
-    parser: 'babel-eslint'
+    ecmaVersion: 13
   },
   plugins: ['sort-exports', 'sort-destructure-keys'],
   root: true,

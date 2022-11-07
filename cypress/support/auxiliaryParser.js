@@ -5,7 +5,11 @@ import {
   SPECIAL_NAMES
 } from './constantObjects'
 
-
+// eslint-disable-next-line import/namespace
+import { SyntaticTree } from './syntacticTreeStructure'
+const syntaticTree = new SyntaticTree()
+syntaticTree.addNewClass({ oneNewClass: { a: 10 } })
+syntaticTree.printMyTree()
 const {
   IDENTIFIER,
   STRING
