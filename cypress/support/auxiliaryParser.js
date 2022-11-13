@@ -8,8 +8,7 @@ import {
 // eslint-disable-next-line import/namespace
 import { SyntaticTree } from './syntacticTreeStructure'
 const syntaticTree = new SyntaticTree()
-syntaticTree.addNewClass({ oneNewClass: { a: 10 } })
-syntaticTree.printMyTree()
+
 const {
   IDENTIFIER,
   STRING
@@ -80,12 +79,14 @@ async function auxiliaryParser({ Tokens, actualCase = '', index }) {
     return -1
   }
   if (Tokens.length === index){
+    syntaticTree.printMyTree()
     return 1
   }
   switch (actualCase) {
     case CLASS:
       let idx
-      idx = await handleClass({ Tokens, index })
+      const indexOfClass = syntaticTree.addNewClass({ oneNewClass: Tokens[index - 1] })
+      idx = await handleClass({ Tokens, index, indexOfClass })
       const tokenOfClass = Tokens[idx].token
       if (tokenOfClass === SEMICOLON){
         return auxiliaryParser({ Tokens, index: idx + 1, actualCase: '' })
@@ -105,20 +106,22 @@ async function auxiliaryParser({ Tokens, actualCase = '', index }) {
   }
 }
 
-async function handleClass({ Tokens, index }){
+async function handleClass({ Tokens, index, indexOfClass }){
+
   let idxAfterInherits
   let indexOfEndClass
   const { type } = Tokens[index]
   if (type === IDENTIFIER) {
+    syntaticTree.programClasses[indexOfClass].addIdentifierOfClass({ token: Tokens[index] })
     let indexAux = index+1
     let conditional = true
     const { token } = Tokens[indexAux]
     switch (token){
       case INHERITS:
-        idxAfterInherits = handleInherits({ Tokens, index: indexAux+1 })
+        idxAfterInherits = handleInherits({ Tokens, index: indexAux+1, indexOfClass })
         indexAux = idxAfterInherits
         while (conditional){
-          indexAux = handleFeature({ Tokens, index: indexAux })
+          indexAux = handleFeature({ Tokens, index: indexAux, indexOfClass })
           const { token } = Tokens[indexAux]
           if (token === SEMICOLON){
             conditional = false
@@ -130,7 +133,7 @@ async function handleClass({ Tokens, index }){
       case OPEN_BRACES:
         indexAux++
         while (conditional){
-          indexAux = handleFeature({ Tokens, index: indexAux })
+          indexAux = handleFeature({ Tokens, index: indexAux, indexOfClass })
           const { token } = Tokens[indexAux]
           if (token === SEMICOLON){
             conditional = false
@@ -149,10 +152,11 @@ async function handleClass({ Tokens, index }){
   return indexOfEndClass
 }
 
-function handleInherits({ Tokens, index }){
+function handleInherits({ Tokens, index, indexOfClass }){
   let endIndexOfInherits
   const { type } = Tokens[index]
   if (type === IDENTIFIER) {
+    syntaticTree.programClasses[indexOfClass].addInherits({ father: Tokens[index] })
     const { token } = Tokens[index + 1]
     if (token === OPEN_BRACES){
       endIndexOfInherits = index + 2
@@ -167,7 +171,8 @@ function handleInherits({ Tokens, index }){
   return endIndexOfInherits
 }
 
-function handleFeature({ Tokens, index }){
+function handleFeature({ Tokens, index, indexOfClass }){
+
   let endIndexOfFeature
   let idxAfterColonCase
   let idxAfterOpenParenthesesCase
@@ -176,19 +181,36 @@ function handleFeature({ Tokens, index }){
   if (token === CLOSE_BRACES){
     endIndexOfFeature = index + 1
   } else if (type === IDENTIFIER) {
+    let indexOfFeature = syntaticTree.programClasses[indexOfClass].addFeatureNode({ newFeature: Tokens[index] })
     const { token } = Tokens[index + 1]
     switch (token){
       case COLON:
-        idxAfterColonCase = handleFeatureColonCase({ Tokens,index: index + 2 })
+        let indexOfLastFormalColonCase =
+            syntaticTree.programClasses[indexOfClass]
+              .classFeatures[indexOfFeature]
+              .addFormal({ newFormal: Tokens[index] })
+        idxAfterColonCase = handleFeatureColonCase({ Tokens,index: index + 2, indexOfLastFormalColonCase, indexOfFeature, indexOfClass })
         const localToken = Tokens[idxAfterColonCase].token
         if (localToken === SEMICOLON){
           idxAfterColonCase = idxAfterColonCase + 1
         }
+
         endIndexOfFeature = idxAfterColonCase
         break
       case OPEN_PARENTHESES:
-        idxAfterOpenParenthesesCase = handleFeatureOpenParenthesesCase({ Tokens,index: index + 2 })
-        idxAfterCloseParenthesesCase = handleFeatureAfterCloseParenthesesCase({ Tokens,index: idxAfterOpenParenthesesCase })
+
+        idxAfterOpenParenthesesCase = handleFeatureOpenParenthesesCase({
+          Tokens,
+          index: index + 2,
+          indexOfClass,
+          indexOfFeature
+        })
+        idxAfterCloseParenthesesCase = handleFeatureAfterCloseParenthesesCase({
+          Tokens,
+          index: idxAfterOpenParenthesesCase ,
+          indexOfClass,
+          indexOfFeature
+        })
         const { token } = Tokens[idxAfterCloseParenthesesCase]
         if (token === CLOSE_BRACES){
           const { token } = Tokens[idxAfterCloseParenthesesCase + 1]
@@ -216,14 +238,24 @@ function handleFeature({ Tokens, index }){
   return endIndexOfFeature
 }
 
-function handleFeatureOpenParenthesesCase({ Tokens, index }){
+function handleFeatureOpenParenthesesCase({
+  Tokens,
+  index,
+  indexOfClass,
+  indexOfFeature
+}){
   let endIndexOfFeature
   const { token, type } = Tokens[index]
   if (token === CLOSE_PARENTHESES){
     endIndexOfFeature = index + 1
   } else {
     if (type === IDENTIFIER) {
-      endIndexOfFeature = handleExtraFormals({ Tokens, index: index + 1 })
+      endIndexOfFeature = handleExtraFormals({
+        Tokens,
+        index: index + 1,
+        indexOfClass,
+        indexOfFeature
+      })
       const { token } = Tokens[endIndexOfFeature]
       if (token === CLOSE_PARENTHESES){
         endIndexOfFeature = endIndexOfFeature + 1
@@ -239,17 +271,32 @@ function handleFeatureOpenParenthesesCase({ Tokens, index }){
   return endIndexOfFeature
 }
 
-function handleExtraFormals({ Tokens, index }){
+function handleExtraFormals({
+  Tokens,
+  index,
+  indexOfClass,
+  indexOfFeature
+}){
+
+  let indexOfLastFormalOpenParenthesisCase =
+      syntaticTree.programClasses[indexOfClass]
+        .classFeatures[indexOfFeature]
+        .addFormal({ newFormal: Tokens[index - 1] })
+
   let endIndexOfFormal
   const { token } = Tokens[index]
   if (token === COLON){
     const { type } = Tokens[index + 1]
     if (type === IDENTIFIER){
       const { token } = Tokens[index + 2]
+      syntaticTree.programClasses[indexOfClass]
+        .classFeatures[indexOfFeature]
+        .myFormals[indexOfLastFormalOpenParenthesisCase]
+        .addReturnType({ token: Tokens[index + 1] })
       if (token === COMMA){
         const { type } = Tokens[index + 3]
         if (type === IDENTIFIER){
-          endIndexOfFormal = handleExtraFormals({ Tokens, index: index + 4 })
+          endIndexOfFormal = handleExtraFormals({ Tokens, index: index + 4,indexOfClass, indexOfFeature })
         } else {
           auxPrintForError({ Tokens, index: index + 3 , session: 'Inside handleExtraFormals - 1' })
           endIndexOfFormal = -1
@@ -269,13 +316,16 @@ function handleExtraFormals({ Tokens, index }){
   return endIndexOfFormal
 }
 
-function handleFeatureAfterCloseParenthesesCase({ Tokens, index }){
+function handleFeatureAfterCloseParenthesesCase({ Tokens, index, indexOfClass, indexOfFeature }){
   let endIndexOfFeature
   let endIndexOfExpressionGroup1
   const { token } = Tokens[index]
   if (token === COLON){
     const { type } = Tokens[index + 1]
     if (type === IDENTIFIER){
+      syntaticTree.programClasses[indexOfClass]
+        .classFeatures[indexOfFeature]
+        .addMyTypeOfReturn({ type: Tokens[index + 1] })
       const { token } = Tokens[index + 2]
       if (token === OPEN_BRACES){
         endIndexOfExpressionGroup1 = handleExpressionGroup1({ Tokens, index: index + 3 })
@@ -296,11 +346,16 @@ function handleFeatureAfterCloseParenthesesCase({ Tokens, index }){
   return endIndexOfFeature
 }
 
-function handleFeatureColonCase({ Tokens, index }){
+function handleFeatureColonCase({ Tokens, index, indexOfClass, indexOfFeature, indexOfLastFormalColonCase }){
+
   let endIndexOfFeature
   let endIndexOfExpressionGroup1
   const { type } = Tokens[index]
   if (type === IDENTIFIER){
+    syntaticTree.programClasses[indexOfClass]
+      .classFeatures[indexOfFeature]
+      .myFormals[indexOfLastFormalColonCase]
+      .addReturnType({ token: Tokens[index] })
     const { token } = Tokens[index + 1]
     if (token === SEMICOLON){
       endIndexOfFeature = index + 2
